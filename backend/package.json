@@ -1,0 +1,17 @@
+{
+  "name": "latex-pdf-backend",
+  "version": "1.0.0",
+  "description": "Compila progetti LaTeX in PDF con parametri. API Express per il frontend.",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node index.js",
+    "compile": "node examples/compile.js"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.0"
+  }
+}

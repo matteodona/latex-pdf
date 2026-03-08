@@ -1,0 +1,105 @@
+\newpage
+\pagestyle{fancy}
+
+\section{Soluzione progettuale adottata}
+
+\subsection{Premessa}
+Si precisa che l’infrastruttura di ricarica dovrà essere installata presso il \{luogoInstallazione\} di proprietà di \{nomeCommittente\} \{cognomeCommittente\}, in \{indirizzoCommittente\} che risulta essere un luogo soggetto ai controlli dei VV.F. (come esplicitato nel regolamento D.P.R. n.151 in linea con i procedimenti relativi alla prevenzione degli incendi). \\
+Essendo un luogo che necessita una disciplina riguardante l’adeguamento degli impianti alla prevenzione incendi, oltre alle usuali normative utilizzate per il dimensionamento dell’impianto, è necessario prendere in attenta considerazione le seguenti normative:
+
+\begin{itemize}
+    \item \textbf{CEI 64-8 parte 7}: ambienti ed applicazioni particolari (sezione 751 ambienti a maggior rischio in caso di incendio);
+    \item \textbf{CEI 64-8 V9, sezione 772}: alimentazione dei veicoli elettrici;
+    \item \textbf{Circolare n.2/2018 del ministero dell’intero – Dipartimento dei Vigili del Fuoco}, del soccorso pubblico e della difesa civile, “linee guida per l’installazione di infrastrutture per la ricarica dei veicoli elettrici”. 
+\end{itemize}
+La progettazione degli impianti oggetto del seguente intervento e la scelta dei componenti adottati è stata fatta secondo i criteri generali della progettazione e, essendo un impianto elettrico in bassa tensione (b.t.), tramite le prescrizioni della norma CEI 64-8. \\
+L’impianto elettrico seguente è soggetto a progettazione obbligatoria ai sensi del D.M. 37/2008.
+In allegato è riportato lo schema unifilare del quadro elettrico per la ricarica dei veicoli elettrici.
+
+
+\subsubsection{Aggravio del rischio incendio}
+Si riporta di seguito un \textbf{passaggio sostanziale} estratto dalla circolare n.2/2018, sopra citata.
+
+Qualora l’installazione di un’infrastruttura di ricarica per veicoli elettrici avvenga in un’attività soggetta al controllo dei VV.F., essa comporta una modifica da considerare secondo le fattispecie di seguito indicate:
+\begin{itemize}
+    \item L’installazione di infrastrutture nuove realizzate secondo le indicazioni riportate nelle linee guida allegate […] E realizzate secondo la regola dell’arte ed adeguate alle misure riportate nella sezione 5 di tali linee guida è considerata una modifica non rilevante ai fini della sicurezza antincendio […].
+    \item L’installazione di infrastrutture non realizzate secondo le indicazioni di cui al precedente punto 1, sono considerate, invece modifiche rilevanti ai fini della sicurezza antincendio […]
+\end{itemize}
+
+Si riportano per completezza i requisiti richiesti con la circolare n. 2/2018.  \\
+La stazione di ricarica deve avere le seguenti caratteristiche:
+\begin{itemize}
+    \item Essere dotata di un dispositivo di comando di sgancio di emergenza, ubicato in posizione segnalata ed accessibile anche agli operatori di soccorso, che determini il sezionamento dell’impianto elettrico nei confronti delle sorgenti di alimentazione. Qualora sia presente un comando generale di sgancio elettrico di emergenza a servizio dell’intera attività, tale comando deve agire anche sulla stazione di ricarica;
+    \item Utilizzare un modo di carica Modo 3 o Modo 4 […]
+    \item Essere dotata di estintori portatili idonei all’uso su impianti o apparecchi elettrici in tensione, in aggiunta a quelli già previsti, in ragione di uno ogni 5 punti di connessione o frazione, collocati in posizione segnalata, sicura e facilmente accessibile.
+\end{itemize}
+\textbf{Per maggiori dettagli si rimanda alla pratica di prevenzione incendi redatta da altro professionista}
+L’area in cui è ubicata la stazione di ricarica ed i suoi accessori deve essere segnalata con idonea cartellonistica. La suddetta cartellonistica deve essere collocata in posizione facilmente visibile anche da terzi e deve riportare la seguente dicitura (o simile): \\
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[height=3.5cm]{img/segnalazioneStazioneRicarica.png}
+\caption{\small{Segnalazione stazione di ricarica per veicoli elettrici}}
+\label{fig:segnalazione}
+\end{figure}
+
+
+\subsection{Descrizione del progetto elettrico}
+L’impianto elettrico verrà realizzato in linea a quanto descritto nello schema unifilare allegato. \\
+\{descrizioneProgetto\} \\
+Questo interruttore deve essere sganciato \textbf{da una bobina di minima tensione} che prende alimentazione a valle dell’interruttore dell’autorimessa soggetta a sgancio, tale cavo dovrà essere protetto da un fusibile o un interruttore di piccola taglia a discrezione dell'installatore. Tale sistema permette che il pulsante di sgancio condominiale possa interrompere l'alimentazione della stazione di ricarica in totale sicurezza, conformemente alle indicazioni dei vigili del fuoco. Se non ci dovesse essere un pulsante di sgancio esistente bisognerà farne uno nuovo e dedicato alla wallbox con un sistema di bobine di minima tensione in modo da renderlo utilizzabile anche per i futuri condomini. \\
+Sebbene l’impianto elettrico esistente e condominiale non rientri nell’ambito del presente intervento, è fondamentale che lo stesso venga mantenuto in efficienza tramite un’adeguata attività di manutenzione programmata e mediante verifiche periodiche di funzionalità e sicurezza, in conformità alla normativa vigente, con particolare riferimento al D.M. 37/08 e alle prescrizioni della norma CEI 64-8. \\
+Le specifiche tecniche e i dettagli relativi alle apparecchiature utilizzate sono delineati nello schema unifilare allegato.
+
+\subsubsection{Dati di progetto}
+\begin{center}
+\begin{tabularx}{\textwidth}{lX}
+Luogo di installazione:              & \{luogoInstallazione\} \\
+Classificazione luogo:               & Ai sensi del D.P.R. 151/2011, livelli di pericolosità nelle autorimesse \\
+Sistema di distribuzione:            & TT \\
+Tensione di alimentazione:           & \{tensioneAlimentazione\} \\
+Potenza massima di una singola Wallbox: & \{potenzaWallbox\}\,kW \\
+Fattore di potenza linea Wallbox:    & 0,99 \\
+Temperatura ambiente:                & \{temperaturaAmbiente\}\,°C \\
+Temperatura del terreno:             & \{temperaturaTerreno\}\,°C \\
+\end{tabularx}
+\end{center}
+
+Per maggiori dettagli sui dati di progetto, in merito all’adeguamento antincendio, vedere la pratica di prevenzione incendi redatta da altro professionista.    
+
+\subsubsection{Correnti di cortocircuito presunte nei punti di consegna }
+\begin{center}
+\begin{tabularx}{\textwidth}{lX}
+Corrente di cortocircuito dell'ente fornitore (come indicato da progetto esistente): & \{correnteCortoCircuito\}\,kA \\
+Corrente di cortocircuito su Quadro Wallbox: & (vedere schema unifilare) \\
+\end{tabularx}
+\end{center}
+
+
+\subsubsection{Condutture elettriche}
+Le condutture (linee) elettriche avranno le seguenti caratteristiche:
+
+\begin{center}
+\begin{tabularx}{\textwidth}{lX}
+Lunghezza massima totale:                    & (vedere schema unifilare) \\
+Caduta di tensione massima (cdt):            & 4\% \\
+Sezione linee da contatore a quadro Wallbox: & (vedere schema unifilare) \\
+Sezione linee da quadro Wallbox a presa:      & (vedere schema unifilare) \\
+\end{tabularx}
+\end{center}
+
+\subsubsection{Carichi a valle}
+Le caratteristiche di ciascuna presa, alimentate da ciascun quadro Wallbox, sono le seguenti:
+
+\begin{center}
+\begin{tabularx}{\textwidth}{lX}
+Alimentazione:           & F+N+PE \\
+Potenza attiva assorbita: & \{potenzaWallbox\}\,kW \\
+Fattore di potenza:       & 0,99 \\
+\end{tabularx}
+\end{center}
+
+
+
+\subsubsection{Collegamenti equipotenziali}
+Il conduttore di protezione del nuovo impianto elettrico dovrà essere derivato dall’impianto di dispersione esistente, non oggetto della presente pratica di progetto, in modo tale da garantire l’interconnessione del sistema di ricarica, tramite linea in cavo di colore giallo/verde di sezione pari al conduttore di fase.

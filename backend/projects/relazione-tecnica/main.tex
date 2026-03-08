@@ -1,0 +1,110 @@
+\documentclass[12pt,a4paper]{article}
+
+% -------------------------
+% LINGUA E CODIFICA
+% -------------------------
+\usepackage[italian]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+
+% -------------------------
+% FONT PROFESSIONALE
+% -------------------------
+% \usepackage{newtxtext}
+% \usepackage{newtxmath}
+\usepackage[expansion=false]{microtype}
+
+% -------------------------
+% IMPAGINAZIONE
+% -------------------------
+\usepackage{geometry}
+\geometry{
+top=2.5cm,
+bottom=2.5cm,
+left=2.5cm,
+right=2.5cm,
+headheight=35pt
+}
+
+% -------------------------
+% INTERLINEA
+% -------------------------
+\usepackage{setspace}
+\setstretch{1.15}
+
+% -------------------------
+% TABELLE
+% -------------------------
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{tabularx}
+
+% -------------------------
+% MATEMATICA
+% -------------------------
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+% -------------------------
+% GRAFICA
+% -------------------------
+\usepackage{graphicx}
+
+% -------------------------
+% LINK
+% -------------------------
+\usepackage[hidelinks]{hyperref}
+
+% -------------------------
+% HEADER / FOOTER
+% -------------------------
+\usepackage{fancyhdr}
+% \usepackage{lastpage}
+
+\pagestyle{fancy}
+\fancyhf{}
+
+\include{sections/header}
+
+\include{sections/footer}
+
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0.4pt}
+
+% -------------------------
+% TITOLI SEZIONI
+% -------------------------
+% \usepackage{titlesec}
+% \titleformat{\section}...
+% \titleformat{\subsection}...
+
+% -------------------------
+% PARAGRAFI
+% -------------------------
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt}
+\renewcommand{\arraystretch}{1.2}
+\renewcommand{\contentsname}{SOMMARIO}
+
+% -------------------------
+% DOCUMENTO
+% -------------------------
+
+\begin{document}
+
+\input{sections/fontespizio}
+
+\newpage
+\tableofcontents
+
+\newpage
+\input{sections/chapters/01-premessa}
+\input{sections/chapters/02-riferimenti}
+\input{sections/chapters/03-criteri} % RIVEDI RIFERIMENTI
+\input{sections/chapters/04-soluzione}
+\input{sections/chapters/05-ulteriori}
+\input{sections/chapters/06-allegati}
+
+\end{document}
+
