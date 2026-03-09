@@ -1,0 +1,63 @@
+\documentclass[12pt,a4paper]{article}
+
+\usepackage[italian]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[expansion=false]{microtype}
+\usepackage{geometry}
+\geometry{
+  top=2.5cm,
+  bottom=2.5cm,
+  left=2.5cm,
+  right=2.5cm
+}
+
+\usepackage{setspace}
+\setstretch{1.2}
+
+\usepackage{hyperref}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue,
+  urlcolor=blue
+}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt}
+
+\begin{document}
+
+\begin{center}
+  {\Large\bfseries \{titoloDocumento\}}\\[0.5cm]
+  {\large \{sottotitolo\}}\\[1cm]
+\end{center}
+
+\noindent
+\textbf{Committente}\\
+\{intestazioneCommittente\}\\[0.25cm]
+
+\noindent
+\textbf{Impianto}\\
+\{dettaglioImpianto\}\\[0.25cm]
+
+\noindent
+\textbf{Data documento}\\
+\{dataDocumento\}\\[1cm]
+
+\section*{Nota}
+
+Questo è un \textbf{template di prova} completamente indipendente
+rispetto alla relazione tecnica principale.
+
+Puoi modificare liberamente questa struttura LaTeX,
+aggiungere sezioni, immagini e tabelle senza toccare il codice
+del backend o del frontend, a patto di mantenere i placeholder
+che ti servono (come \verb|{titoloDocumento}|, \verb|{intestazioneCommittente}|, ecc.).
+
+\vfill
+\begin{center}
+  {\small Generato automaticamente dal generatore di template per documenti tecnici.}
+\end{center}
+
+\end{document}
+

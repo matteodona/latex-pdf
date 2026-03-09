@@ -21,6 +21,15 @@ const TEMPLATES: TemplateDefinition[] = [
     description:
       'Genera una relazione tecnica completa a partire da pochi parametri essenziali.',
     tag: 'Impianti elettrici',
+    projectPath: 'relazione-tecnico-specialistica-domestico-tt-cpi',
+  },
+  {
+    id: 'template-di-prova',
+    name: 'Template di prova',
+    description:
+      'Un template di esempio con parametri precompilati per fare delle prove.',
+    tag: 'Demo',
+    projectPath: 'template-di-prova',
   },
 ]
 
@@ -30,6 +39,7 @@ const API_BASE_URL =
 async function compileRelazioneTecnica(
   params: RelazioneTecnicaParams,
   authHeader: string | null,
+  projectPath: string,
 ): Promise<Blob> {
   const tabellaRevisioni =
     params.revisioni.length === 0
@@ -54,7 +64,7 @@ async function compileRelazioneTecnica(
     params.tensioneAlimentazione === '230' ? 'F' : '3F'
 
   const body = {
-    projectPath: 'relazione-tecnico-specialistica-domestico-tt-cpi',
+    projectPath,
     params: {
       sections: {
         fontespizio: {
@@ -154,6 +164,49 @@ function App() {
     const template = TEMPLATES.find((t) => t.id === templateId) ?? null
     setSelectedTemplate(template)
     setCompileState({ status: 'idle' })
+
+    if (template?.id === 'template-di-prova') {
+      setParams({
+        nomeCommittente: 'Mario',
+        cognomeCommittente: 'Rossi',
+        indirizzoCommittente: 'Via Roma 1, Milano',
+        codiceProgetto: 'TEST-001',
+        dataGenerazioneDocumento: '2026-03-09',
+        tipoDiCavo: 'FG16OR16 3G6 mm²',
+        luogoInstallazione: 'box condominiale',
+        descrizioneProgetto:
+          'Installazione di wallbox per ricarica veicolo elettrico in box condominiale.',
+        alimentazioneSgancio: '230 V AC',
+        tensioneAlimentazione: '230',
+        potenzaWallbox: '7,4',
+        temperaturaAmbiente: '25',
+        temperaturaTerreno: '20',
+        revisioni: [
+          {
+            numRevisione: '0',
+            data: '2026-03-09',
+            descrizioneRevisione: 'Prima emissione di prova',
+          },
+        ],
+      })
+    } else {
+      setParams({
+        nomeCommittente: '',
+        cognomeCommittente: '',
+        indirizzoCommittente: '',
+        codiceProgetto: '',
+        dataGenerazioneDocumento: '',
+        tipoDiCavo: '',
+        luogoInstallazione: 'box condominiale',
+        descrizioneProgetto: '',
+        alimentazioneSgancio: '',
+        tensioneAlimentazione: '230',
+        potenzaWallbox: '',
+        temperaturaAmbiente: '',
+        temperaturaTerreno: '',
+        revisioni: [],
+      })
+    }
   }, [templateId])
 
   const handleChange = (
@@ -204,7 +257,10 @@ function App() {
     try {
       const authHeader =
         authState.status === 'authenticated' ? authState.authHeader : null
-      const blob = await compileRelazioneTecnica(params, authHeader)
+      const projectPath =
+        selectedTemplate?.projectPath ??
+        'relazione-tecnico-specialistica-domestico-tt-cpi'
+      const blob = await compileRelazioneTecnica(params, authHeader, projectPath)
       const url = URL.createObjectURL(blob)
       setCompileState({ status: 'success', pdfUrl: url })
     } catch (error) {
@@ -256,6 +312,9 @@ function App() {
           templates={TEMPLATES}
           onSelect={handleSelectTemplate}
           headerRight={headerRight}
+          greetingUsername={
+            authState.status === 'authenticated' ? authState.username : null
+          }
         />
       </div>
     )
@@ -277,6 +336,11 @@ function App() {
           <p className="app-subtitle">
             Compila i parametri e genera il PDF della {selectedTemplate.name}.
           </p>
+          {authState.status === 'authenticated' && (
+            <p className="app-greeting-banner">
+              Ciao <span className="app-greeting-name">{authState.username}</span>
+            </p>
+          )}
         </div>
         <div className="app-header-right">
           <span className="app-template-badge">1 template disponibile</span>

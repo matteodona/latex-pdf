@@ -5,14 +5,25 @@ type TemplateListProps = {
   templates: TemplateDefinition[]
   onSelect: (template: TemplateDefinition) => void
   headerRight?: ReactNode
+  greetingUsername?: string | null
 }
 
-export function TemplateList({ templates, onSelect, headerRight }: TemplateListProps) {
+export function TemplateList({
+  templates,
+  onSelect,
+  headerRight,
+  greetingUsername,
+}: TemplateListProps) {
   return (
     <div>
       <header className="app-header">
         <div>
           <h1 className="app-title">Generatore di template per documenti tecnici</h1>
+          {greetingUsername && (
+            <p className="app-greeting-banner">
+              Ciao <span className="app-greeting-name">{greetingUsername}</span>
+            </p>
+          )}
         </div>
         {headerRight && <div className="app-header-right">{headerRight}</div>}
       </header>
