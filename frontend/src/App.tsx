@@ -2,7 +2,7 @@ import './App.css'
 
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 
 import type {
   CompileState,
@@ -12,6 +12,7 @@ import type {
 import { TemplateList } from './components/TemplateList'
 import { RelazioneTecnicaForm } from './components/RelazioneTecnicaForm'
 import { PdfPreview } from './components/PdfPreview'
+import { useAuth } from './auth/AuthContext'
 
 const TEMPLATES: TemplateDefinition[] = [
   {
@@ -28,6 +29,7 @@ const API_BASE_URL =
 
 async function compileRelazioneTecnica(
   params: RelazioneTecnicaParams,
+  authHeader: string | null,
 ): Promise<Blob> {
   const tabellaRevisioni =
     params.revisioni.length === 0
@@ -88,11 +90,16 @@ async function compileRelazioneTecnica(
     },
   }
 
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  }
+  if (authHeader) {
+    headers.Authorization = authHeader
+  }
+
   const response = await fetch(`${API_BASE_URL}/api/compile`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
+    headers,
     body: JSON.stringify(body),
   })
 
@@ -115,6 +122,7 @@ async function compileRelazioneTecnica(
 function App() {
   const navigate = useNavigate()
   const { templateId } = useParams<{ templateId?: string }>()
+  const { state: authState, logout } = useAuth()
 
   const [selectedTemplate, setSelectedTemplate] =
     useState<TemplateDefinition | null>(
@@ -194,7 +202,9 @@ function App() {
     setCompileState({ status: 'loading' })
 
     try {
-      const blob = await compileRelazioneTecnica(params)
+      const authHeader =
+        authState.status === 'authenticated' ? authState.authHeader : null
+      const blob = await compileRelazioneTecnica(params, authHeader)
       const url = URL.createObjectURL(blob)
       setCompileState({ status: 'success', pdfUrl: url })
     } catch (error) {
@@ -223,9 +233,30 @@ function App() {
   }
 
   if (!selectedTemplate) {
+    const headerRight =
+      authState.status === 'authenticated' ? (
+        <>
+          {authState.role === 'superuser' && (
+            <Link to="/admin" className="secondary small link-button">
+              Admin
+            </Link>
+          )}
+          <button
+            type="button"
+            className="secondary small"
+            onClick={logout}
+          >
+            Esci ({authState.username})
+          </button>
+        </>
+      ) : undefined
     return (
       <div className="app-root">
-        <TemplateList templates={TEMPLATES} onSelect={handleSelectTemplate} />
+        <TemplateList
+          templates={TEMPLATES}
+          onSelect={handleSelectTemplate}
+          headerRight={headerRight}
+        />
       </div>
     )
   }
@@ -247,7 +278,25 @@ function App() {
             Compila i parametri e genera il PDF della {selectedTemplate.name}.
           </p>
         </div>
-        <span className="app-template-badge">1 template disponibile</span>
+        <div className="app-header-right">
+          <span className="app-template-badge">1 template disponibile</span>
+          {authState.status === 'authenticated' && (
+            <>
+              {authState.role === 'superuser' && (
+                <Link to="/admin" className="secondary small link-button">
+                  Admin
+                </Link>
+              )}
+              <button
+                type="button"
+                className="secondary small"
+                onClick={logout}
+              >
+                Esci ({authState.username})
+              </button>
+            </>
+          )}
+        </div>
       </header>
 
       <main className="app-main">

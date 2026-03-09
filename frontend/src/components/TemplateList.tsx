@@ -1,21 +1,20 @@
+import type { ReactNode } from 'react'
 import type { TemplateDefinition } from '../types'
 
 type TemplateListProps = {
   templates: TemplateDefinition[]
   onSelect: (template: TemplateDefinition) => void
+  headerRight?: ReactNode
 }
 
-export function TemplateList({ templates, onSelect }: TemplateListProps) {
+export function TemplateList({ templates, onSelect, headerRight }: TemplateListProps) {
   return (
     <div>
       <header className="app-header">
         <div>
-          <h1>Genera documento</h1>
-          <p className="app-subtitle">
-            Scegli un template, inserisci i parametri e scarica il PDF pronto
-            all&apos;uso.
-          </p>
+          <h1 className="app-title">Generatore di template per documenti tecnici</h1>
         </div>
+        {headerRight && <div className="app-header-right">{headerRight}</div>}
       </header>
 
       <main>

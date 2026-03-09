@@ -10,11 +10,36 @@
 
 .app-header {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: space-between;
   align-items: flex-start;
   gap: 1rem;
   padding-bottom: 0.5rem;
   border-bottom: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+.app-header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+a.link-button {
+  display: inline-block;
+  padding: 0.35rem 0.75rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(148, 163, 184, 0.5);
+  font-size: 0.875rem;
+  text-decoration: none;
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+}
+
+a.link-button:hover {
+  border-color: #6366f1;
+  background: rgba(99, 102, 241, 0.15);
 }
 
 .app-title {
@@ -284,6 +309,66 @@ button.secondary:hover {
   border: none;
   border-radius: 0.35rem;
   background-color: #020617;
+}
+
+.success-message {
+  margin: 0;
+  font-size: 1rem;
+  color: #86efac;
+}
+
+.auth-link {
+  margin-top: 1rem;
+  font-size: 0.9rem;
+}
+
+.auth-link a {
+  color: #93c5fd;
+  text-decoration: none;
+}
+
+.auth-link a:hover {
+  text-decoration: underline;
+}
+
+.admin-pane {
+  max-width: 640px;
+}
+
+.admin-user-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.admin-user-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  background: rgba(15, 23, 42, 0.5);
+}
+
+.admin-username {
+  font-weight: 500;
+  min-width: 120px;
+}
+
+.admin-date {
+  font-size: 0.9rem;
+  color: #9ca3af;
+}
+
+.admin-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 0.5rem;
 }
 
 @media (max-width: 900px) {
