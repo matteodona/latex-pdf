@@ -11,16 +11,114 @@ Questo progetto è un **generatore di PDF** basato su **template LaTeX**, con:
   - elenca i template disponibili,
   - per ogni template chiede i parametri e mostra il PDF generato.
 
+La modalità consigliata per eseguirlo è tramite **Docker**.
+
 ---
 
-## 1. Struttura del progetto
+## 1. Come lanciare il progetto
 
-### 1.1. Cartelle principali
+### 1.1. Avvio rapido con Docker (consigliato)
+
+Prerequisiti:
+
+- Docker Desktop installato sul sistema (con supporto a `docker compose`).
+- `pdflatex` è già incluso nell’immagine Docker del backend, quindi non serve installare LaTeX sulla macchina host.
+
+Passi:
+
+1. Dalla root del progetto (`latexPdf/`), costruisci ed avvia i container:
+
+   ```bash
+   docker compose build
+   docker compose up
+   ```
+
+2. In un altro terminale, crea il superuser **dentro** il container backend (solo la prima volta):
+
+   ```bash
+   docker exec -it latex-backend node scripts/createSuperUser.js admin 'TuaPasswordSicura123!'
+   ```
+
+3. Apri il browser su:
+
+   - Frontend: `http://localhost:8080`
+   - Backend API (se vuoi provarle a mano): `http://localhost:3001`
+
+4. Flusso base:
+
+   - vai su `http://localhost:8080`,
+   - effettua il login come `admin`,
+   - opzionalmente registra e approva nuovi utenti dall’area **Admin**,
+   - seleziona un template, compila i campi e genera il PDF.
+
+Per fermare i container:
+
+```bash
+docker compose down
+```
+
+> Nota: il database utenti (`backend/data/users.db`) è montato su un volume Docker (`backend-data`), quindi non si perde tra un `docker compose up` e il successivo.
+
+### 1.2. Avvio senza Docker (solo sviluppo locale)
+
+Se preferisci, puoi lanciare backend e frontend direttamente sulla tua macchina.
+
+Prerequisiti:
+
+- **Node.js** (≥ 16) e **npm**.
+- Una distribuzione **LaTeX** con `pdflatex` installato e presente nel PATH (es. TeX Live / MacTeX).
+
+1. Installa le dipendenze:
+
+   Backend:
+
+   ```bash
+   cd backend
+   npm install
+   ```
+
+   Frontend:
+
+   ```bash
+   cd frontend
+   npm install
+   ```
+
+2. Crea il superuser (una volta sola):
+
+   ```bash
+   cd backend
+   node scripts/createSuperUser.js admin 'TuaPasswordSicura123!'
+   ```
+
+3. Avvia backend e frontend:
+
+   Backend:
+
+   ```bash
+   cd backend
+   npm start
+   ```
+
+   Frontend:
+
+   ```bash
+   cd frontend
+   npm run dev
+   ```
+
+4. Apri `http://localhost:5173` nel browser.
+
+---
+
+## 2. Struttura del progetto
+
+### 2.1. Cartelle principali
 
 - `backend/` – server Express, compilazione LaTeX e gestione utenti.
 - `frontend/` – applicazione React (Vite) che usa le API del backend.
 
-### 1.2. Backend
+### 2.2. Backend
 
 Dentro `backend/` trovi:
 
@@ -116,7 +214,7 @@ Dentro `backend/` trovi:
   - `relazione-tecnico-specialistica-domestico-tt-cpi/` – template principale della relazione tecnica.
   - `template-di-prova/` – template di prova minimale, con `main.tex` semplice e pochi placeholder.
 
-### 1.3. Frontend
+### 2.3. Frontend
 
 Dentro `frontend/` trovi:
 
@@ -163,65 +261,9 @@ Dentro `frontend/` trovi:
 
 ---
 
-## 2. Requisiti
+## 3. Uso dell’applicazione
 
-Per usare il progetto in locale servono:
-
-- **Node.js** (≥ 16) e **npm**,
-- una distribuzione **LaTeX** con il comando `pdflatex` disponibile nel PATH (es. TeX Live o MacTeX).
-
----
-
-## 3. Avvio del progetto
-
-### 3.1. Installazione dipendenze
-
-Backend:
-
-```bash
-cd backend
-npm install
-```
-
-Frontend:
-
-```bash
-cd frontend
-npm install
-```
-
-### 3.2. Creare il superuser
-
-Esegui una sola volta:
-
-```bash
-cd backend
-node scripts/createSuperUser.js admin 'TuaPasswordSicura123!'
-```
-
-### 3.3. Avviare backend e frontend
-
-Backend:
-
-```bash
-cd backend
-npm start
-```
-
-Frontend:
-
-```bash
-cd frontend
-npm run dev
-```
-
-Apri il browser su `http://localhost:5173`.
-
----
-
-## 4. Uso dell’applicazione
-
-### 4.1. Login / Registrazione
+### 3.1. Login / Registrazione
 
 - Vai su `http://localhost:5173`.
 - Se non sei loggato vieni portato alla pagina di **login** (`/login`).
@@ -231,7 +273,7 @@ Apri il browser su `http://localhost:5173`.
 
 Gli utenti nuovi sono creati in stato `pending` e non possono generare PDF finché non vengono approvati dall’admin.
 
-### 4.2. Area Admin
+### 3.2. Area Admin
 
 1. Accedi come superuser.
 2. Clicca su **Admin** in alto a destra.
@@ -240,7 +282,7 @@ Gli utenti nuovi sono creati in stato `pending` e non possono generare PDF finch
    - vedere tutti gli utenti approvati/rifiutati,
    - eliminare utenti non superuser.
 
-### 4.3. Generare un PDF da un template
+### 3.3. Generare un PDF da un template
 
 1. Dopo il login, la home mostra:
    - il titolo principale,
@@ -255,7 +297,7 @@ Gli utenti nuovi sono creati in stato `pending` e non possono generare PDF finch
 
 ---
 
-## 5. Aggiungere nuovi template LaTeX
+## 4. Aggiungere nuovi template LaTeX
 
 Per aggiungere un nuovo tipo di documento:
 
