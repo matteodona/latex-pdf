@@ -115,6 +115,13 @@ function compileToPdf(projectDir, paramsStructure = {}) {
   }
 
   try {
+    // Prima compilazione: genera .aux, .toc, ecc.
+    execSync('pdflatex -interaction=nonstopmode main.tex', {
+      cwd: workDir,
+      stdio: 'ignore',
+      shell: true,
+    });
+    // Seconda compilazione: sistema indice (SOMMARIO), riferimenti, ecc.
     execSync('pdflatex -interaction=nonstopmode main.tex', {
       cwd: workDir,
       stdio: 'ignore',

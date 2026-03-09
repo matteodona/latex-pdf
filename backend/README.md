@@ -22,7 +22,7 @@ Server in ascolto su http://localhost:3001 (o `PORT` se impostata).
 ```
 backend/
 ├── projects/                    # Un progetto per sottocartella
-│   └── relazione-tecnica/      # Progetto LaTeX (main.tex, sections/...)
+│   └── relazione-tecnico-specialistica-domestico-tt-cpi/  # Progetto LaTeX
 ├── src/                         # Modulo compilazione
 │   ├── compileLatex.js
 │   └── index.js
@@ -40,7 +40,7 @@ Per aggiungere un nuovo tipo di documento: crea una sottocartella in `projects/`
 | Comando | Descrizione |
 |--------|-------------|
 | `npm start` | Avvia il server API (porta 3001) |
-| `npm run compile` | Compila il progetto relazione-tecnica con l’esempio |
+| `npm run compile` | Compila il progetto Relazione tecnico specialistica DOMESTICO TT CPI con l’esempio |
 
 ## API
 
@@ -55,11 +55,11 @@ Compila e restituisce il PDF.
 **Body (JSON):**
 ```json
 {
-  "projectPath": "relazione-tecnica",
+  "projectPath": "relazione-tecnico-specialistica-domestico-tt-cpi",
   "params": {
     "sections": {
       "fontespizio": { "nomeCommittente": "...", "cognomeCommittente": "...", "indirizzoCommittente": "...", "tabellaRevisioni": [...] },
-      "footer": { "codProgetto": "...", "dataGenerazioneDocumento": "..." },
+      "footer": { "codiceProgetto": "...", "dataGenerazioneDocumento": "..." },
       "chapters": {
         "03-criteri": { "tipoDiCavo": "..." },
         "04-soluzione": { "luogoInstallazione": "...", ... }
@@ -69,7 +69,8 @@ Compila e restituisce il PDF.
 }
 ```
 
-- **projectPath** (obbligatorio): nome della sottocartella in `projects/` (es. `"relazione-tecnica"`).
+- **projectPath** (obbligatorio): nome della sottocartella in `projects/`
+  (es. `"relazione-tecnico-specialistica-domestico-tt-cpi"`).
 - **params** (opzionale): struttura che ricalca cartelle/file del progetto scelto.
 
 **Successo 200:** corpo = PDF (attachment). **Errore 400/500:** `{ "error": "messaggio" }`.
@@ -79,7 +80,10 @@ Compila e restituisce il PDF.
 const res = await fetch('http://localhost:3001/api/compile', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ projectPath: 'relazione-tecnica', params: { ... } }),
+  body: JSON.stringify({
+    projectPath: 'relazione-tecnico-specialistica-domestico-tt-cpi',
+    params: { ... },
+  }),
 });
 const blob = await res.blob();
 // es. URL.createObjectURL(blob) per anteprima o download
@@ -90,12 +94,15 @@ const blob = await res.blob();
 ```js
 const path = require('path');
 const { compileToPdf } = require('./src');
-const pdfPath = compileToPdf(path.join(__dirname, 'projects', 'relazione-tecnica'), paramsStructure);
+const pdfPath = compileToPdf(
+  path.join(__dirname, 'projects', 'relazione-tecnico-specialistica-domestico-tt-cpi'),
+  paramsStructure,
+);
 ```
 
 ## Placeholder nei .tex
 
-Nei file `.tex` usa `\{nomeParametro\}` (es. `\{nomeCommittente\}`, `\{codProgetto\}`). Per la tabella revisioni: parametro `tabellaRevisioni` (array di `{ numRevisione, data, descrizioneRevisione }`).
+Nei file `.tex` usa `\{nomeParametro\}` (es. `\{nomeCommittente\}`, `\{codiceProgetto\}`). Per la tabella revisioni: parametro `tabellaRevisioni` (array di `{ numRevisione, data, descrizioneRevisione }`).
 
 ## Licenza
 

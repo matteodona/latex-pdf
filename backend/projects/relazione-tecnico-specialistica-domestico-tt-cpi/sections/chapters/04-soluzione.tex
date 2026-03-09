@@ -47,7 +47,7 @@ L’area in cui è ubicata la stazione di ricarica ed i suoi accessori deve esse
 \subsection{Descrizione del progetto elettrico}
 L’impianto elettrico verrà realizzato in linea a quanto descritto nello schema unifilare allegato. \\
 \{descrizioneProgetto\} \\
-Questo interruttore deve essere sganciato \textbf{da una bobina di minima tensione} che prende alimentazione a valle dell’interruttore dell’autorimessa soggetta a sgancio, tale cavo dovrà essere protetto da un fusibile o un interruttore di piccola taglia a discrezione dell'installatore. Tale sistema permette che il pulsante di sgancio condominiale possa interrompere l'alimentazione della stazione di ricarica in totale sicurezza, conformemente alle indicazioni dei vigili del fuoco. Se non ci dovesse essere un pulsante di sgancio esistente bisognerà farne uno nuovo e dedicato alla wallbox con un sistema di bobine di minima tensione in modo da renderlo utilizzabile anche per i futuri condomini. \\
+Questo interruttore deve essere sganciato \textbf{da una bobina di minima tensione} che prende alimentazione a valle di \{alimentazioneSgancio\} soggetta a sgancio, tale cavo dovrà essere protetto da un fusibile o un interruttore di piccola taglia a discrezione dell'installatore. Tale sistema permette che il pulsante di sgancio condominiale possa interrompere l'alimentazione della stazione di ricarica in totale sicurezza, conformemente alle indicazioni dei vigili del fuoco. Se non ci dovesse essere un pulsante di sgancio esistente bisognerà farne uno nuovo e dedicato alla wallbox con un sistema di bobine di minima tensione in modo da renderlo utilizzabile anche per i futuri condomini. \\
 Sebbene l’impianto elettrico esistente e condominiale non rientri nell’ambito del presente intervento, è fondamentale che lo stesso venga mantenuto in efficienza tramite un’adeguata attività di manutenzione programmata e mediante verifiche periodiche di funzionalità e sicurezza, in conformità alla normativa vigente, con particolare riferimento al D.M. 37/08 e alle prescrizioni della norma CEI 64-8. \\
 Le specifiche tecniche e i dettagli relativi alle apparecchiature utilizzate sono delineati nello schema unifilare allegato.
 
@@ -93,7 +93,7 @@ Le caratteristiche di ciascuna presa, alimentate da ciascun quadro Wallbox, sono
 
 \begin{center}
 \begin{tabularx}{\textwidth}{lX}
-Alimentazione:           & F+N+PE \\
+Alimentazione:           & \{tensioneWallbox\}+N+PE \\
 Potenza attiva assorbita: & \{potenzaWallbox\}\,kW \\
 Fattore di potenza:       & 0,99 \\
 \end{tabularx}

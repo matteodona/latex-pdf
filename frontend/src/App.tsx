@@ -1,7 +1,8 @@
 import './App.css'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
 
 import type {
   CompileState,
@@ -14,8 +15,8 @@ import { PdfPreview } from './components/PdfPreview'
 
 const TEMPLATES: TemplateDefinition[] = [
   {
-    id: 'relazione-tecnica',
-    name: 'Relazione tecnica',
+    id: 'relazione-tecnico-specialistica-domestico-tt-cpi',
+    name: 'Relazione tecnico specialistica DOMESTICO TT CPI',
     description:
       'Genera una relazione tecnica completa a partire da pochi parametri essenziali.',
     tag: 'Impianti elettrici',
@@ -28,17 +29,40 @@ const API_BASE_URL =
 async function compileRelazioneTecnica(
   params: RelazioneTecnicaParams,
 ): Promise<Blob> {
+  const tabellaRevisioni =
+    params.revisioni.length === 0
+      ? [
+          {
+            numRevisione: '0',
+            data: params.dataGenerazioneDocumento,
+            descrizioneRevisione: 'Emissione documento',
+          },
+        ]
+      : params.revisioni.map((rev, index) => ({
+          numRevisione: index === 0 ? '0' : rev.numRevisione,
+          data:
+            index === 0 ? params.dataGenerazioneDocumento : rev.data,
+          descrizioneRevisione: rev.descrizioneRevisione,
+        }))
+
+  const tensioneAlimentazioneLatex = `${params.tensioneAlimentazione}\\,V`
+  const correnteCortoCircuito =
+    params.tensioneAlimentazione === '230' ? '6' : '10'
+  const tensioneWallbox =
+    params.tensioneAlimentazione === '230' ? 'F' : '3F'
+
   const body = {
-    projectPath: 'relazione-tecnica',
+    projectPath: 'relazione-tecnico-specialistica-domestico-tt-cpi',
     params: {
       sections: {
         fontespizio: {
           nomeCommittente: params.nomeCommittente,
           cognomeCommittente: params.cognomeCommittente,
           indirizzoCommittente: params.indirizzoCommittente,
+          tabellaRevisioni,
         },
         footer: {
-          codProgetto: params.codProgetto,
+          codiceProgetto: params.codiceProgetto,
           dataGenerazioneDocumento: params.dataGenerazioneDocumento,
         },
         chapters: {
@@ -47,6 +71,17 @@ async function compileRelazioneTecnica(
           },
           '04-soluzione': {
             luogoInstallazione: params.luogoInstallazione,
+            nomeCommittente: params.nomeCommittente,
+            cognomeCommittente: params.cognomeCommittente,
+            indirizzoCommittente: params.indirizzoCommittente,
+            descrizioneProgetto: params.descrizioneProgetto,
+            alimentazioneSgancio: params.alimentazioneSgancio,
+            tensioneAlimentazione: tensioneAlimentazioneLatex,
+            potenzaWallbox: params.potenzaWallbox,
+            temperaturaAmbiente: params.temperaturaAmbiente,
+            temperaturaTerreno: params.temperaturaTerreno,
+            correnteCortoCircuito,
+            tensioneWallbox,
           },
         },
       },
@@ -78,28 +113,80 @@ async function compileRelazioneTecnica(
 }
 
 function App() {
+  const navigate = useNavigate()
+  const { templateId } = useParams<{ templateId?: string }>()
+
   const [selectedTemplate, setSelectedTemplate] =
-    useState<TemplateDefinition | null>(null)
+    useState<TemplateDefinition | null>(
+      TEMPLATES.find((t) => t.id === templateId) ?? null,
+    )
 
   const [params, setParams] = useState<RelazioneTecnicaParams>({
     nomeCommittente: '',
     cognomeCommittente: '',
     indirizzoCommittente: '',
-    codProgetto: '',
+    codiceProgetto: '',
     dataGenerazioneDocumento: '',
     tipoDiCavo: '',
-    luogoInstallazione: '',
+    luogoInstallazione: 'box condominiale',
+    descrizioneProgetto: '',
+    alimentazioneSgancio: '',
+    tensioneAlimentazione: '230',
+    potenzaWallbox: '',
+    temperaturaAmbiente: '',
+    temperaturaTerreno: '',
+    revisioni: [],
   })
 
   const [compileState, setCompileState] = useState<CompileState>({
     status: 'idle',
   })
 
+  useEffect(() => {
+    const template = TEMPLATES.find((t) => t.id === templateId) ?? null
+    setSelectedTemplate(template)
+    setCompileState({ status: 'idle' })
+  }, [templateId])
+
   const handleChange = (
     field: keyof RelazioneTecnicaParams,
     value: string,
   ) => {
     setParams((prev) => ({ ...prev, [field]: value }))
+  }
+
+  const handleRevisionChange = (
+    index: number,
+    field: 'numRevisione' | 'data' | 'descrizioneRevisione',
+    value: string,
+  ) => {
+    setParams((prev) => {
+      const revisioni = [...prev.revisioni]
+      const current = revisioni[index] ?? {
+        numRevisione: '',
+        data: '',
+        descrizioneRevisione: '',
+      }
+      revisioni[index] = { ...current, [field]: value }
+      return { ...prev, revisioni }
+    })
+  }
+
+  const handleAddRevision = () => {
+    setParams((prev) => ({
+      ...prev,
+      revisioni: [
+        ...prev.revisioni,
+        { numRevisione: '', data: '', descrizioneRevisione: '' },
+      ],
+    }))
+  }
+
+  const handleRemoveRevision = (index: number) => {
+    setParams((prev) => ({
+      ...prev,
+      revisioni: prev.revisioni.filter((_, i) => i !== index),
+    }))
   }
 
   const handleGeneratePdf = async (event: FormEvent) => {
@@ -123,18 +210,16 @@ function App() {
     if (compileState.status !== 'success') return
     const link = document.createElement('a')
     link.href = compileState.pdfUrl
-    link.download = 'relazione-tecnica.pdf'
+    link.download = 'relazione-tecnico-specialistica-domestico-tt-cpi.pdf'
     link.click()
   }
 
   const handleSelectTemplate = (template: TemplateDefinition) => {
-    setSelectedTemplate(template)
-    setCompileState({ status: 'idle' })
+    navigate(`/${template.id}`)
   }
 
   const handleChangeTemplate = () => {
-    setSelectedTemplate(null)
-    setCompileState({ status: 'idle' })
+    navigate('/')
   }
 
   if (!selectedTemplate) {
@@ -171,6 +256,9 @@ function App() {
             params={params}
             compileState={compileState}
             onChange={handleChange}
+            onRevisionChange={handleRevisionChange}
+            onAddRevision={handleAddRevision}
+            onRemoveRevision={handleRemoveRevision}
             onSubmit={handleGeneratePdf}
             onDownload={handleDownload}
           />

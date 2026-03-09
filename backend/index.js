@@ -24,7 +24,8 @@ app.get('/api/health', (req, res) => {
 /**
  * POST /api/compile
  * Body: { projectPath: string, params?: object }
- * - projectPath: nome progetto, sottocartella di projects/ (es. "relazione-tecnica")
+ * - projectPath: nome progetto, sottocartella di projects/
+ *   (es. "relazione-tecnico-specialistica-domestico-tt-cpi")
  * - params: struttura parametri che ricalca il progetto (come in examples/compile.js)
  * Risposta: PDF in binary (Content-Disposition: attachment) o 4xx/5xx con { error: string }
  */
