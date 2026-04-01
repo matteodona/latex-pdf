@@ -14,32 +14,57 @@ import { RelazioneTecnicaForm } from './components/RelazioneTecnicaForm'
 import { PdfPreview } from './components/PdfPreview'
 import { useAuth } from './auth/AuthContext'
 
-const TEMPLATES: TemplateDefinition[] = [
-  {
-    id: 'relazione-tecnico-specialistica-domestico-tt-cpi',
-    name: 'Relazione tecnico specialistica DOMESTICO TT CPI',
-    description:
-      'Genera una relazione tecnica completa a partire da pochi parametri essenziali.',
-    tag: 'Impianti elettrici',
-    projectPath: 'relazione-tecnico-specialistica-domestico-tt-cpi',
-  },
-  {
-    id: 'template-di-prova',
-    name: 'Template di prova',
-    description:
-      'Un template di esempio con parametri precompilati per fare delle prove.',
-    tag: 'Demo',
-    projectPath: 'template-di-prova',
-  },
-]
-
 const API_BASE_URL =
   import.meta.env.VITE_BACKEND_URL ?? 'http://localhost:3001'
+
+type TemplatesLoadState = 'idle' | 'loading' | 'loaded' | 'error'
+
+async function fetchTemplates(): Promise<TemplateDefinition[]> {
+  const response = await fetch(`${API_BASE_URL}/api/templates`)
+  if (!response.ok) {
+    throw new Error('Impossibile caricare l’elenco dei template.')
+  }
+  const data = (await response.json()) as { templates?: TemplateDefinition[] }
+  return data.templates ?? []
+}
+
+/** Valori iniziali del form (data revisione 0 allineata alla data documento). */
+function defaultRelazioneParams(options?: {
+  revisionDescription?: string
+  codiceProgetto?: string
+  temperaturaAmbiente?: string
+}): RelazioneTecnicaParams {
+  const today = new Date().toISOString().slice(0, 10)
+  return {
+    nomeCommittente: 'Mario',
+    cognomeCommittente: 'Rossi',
+    indirizzoCommittente: 'Via Roma 1, 20100 Milano',
+    codiceProgetto: options?.codiceProgetto ?? 'PROG-2026-001',
+    dataGenerazioneDocumento: today,
+    tipoDiCavo: 'FG16OR16 3G6 mm²',
+    luogoInstallazione: 'box condominiale',
+    descrizioneProgetto:
+      'Installazione di wallbox per ricarica veicolo elettrico in box condominiale.',
+    alimentazioneSgancio: '230 V AC',
+    tensioneAlimentazione: '230',
+    potenzaWallbox: '7,4',
+    temperaturaAmbiente: options?.temperaturaAmbiente ?? '30',
+    temperaturaTerreno: '20',
+    revisioni: [
+      {
+        numRevisione: '0',
+        data: today,
+        descrizioneRevisione:
+          options?.revisionDescription ?? 'Emissione documento',
+      },
+    ],
+  }
+}
 
 async function compileRelazioneTecnica(
   params: RelazioneTecnicaParams,
   authHeader: string | null,
-  projectPath: string,
+  templateSlug: string,
 ): Promise<Blob> {
   const tabellaRevisioni =
     params.revisioni.length === 0
@@ -64,7 +89,6 @@ async function compileRelazioneTecnica(
     params.tensioneAlimentazione === '230' ? 'F' : '3F'
 
   const body = {
-    projectPath,
     params: {
       sections: {
         fontespizio: {
@@ -107,11 +131,14 @@ async function compileRelazioneTecnica(
     headers.Authorization = authHeader
   }
 
-  const response = await fetch(`${API_BASE_URL}/api/compile`, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify(body),
-  })
+  const response = await fetch(
+    `${API_BASE_URL}/api/templates/${encodeURIComponent(templateSlug)}/compile`,
+    {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(body),
+    },
+  )
 
   if (!response.ok) {
     let message = 'Errore durante la compilazione del PDF.'
@@ -134,80 +161,68 @@ function App() {
   const { templateId } = useParams<{ templateId?: string }>()
   const { state: authState, logout } = useAuth()
 
-  const [selectedTemplate, setSelectedTemplate] =
-    useState<TemplateDefinition | null>(
-      TEMPLATES.find((t) => t.id === templateId) ?? null,
-    )
+  const [templates, setTemplates] = useState<TemplateDefinition[]>([])
+  const [templatesState, setTemplatesState] =
+    useState<TemplatesLoadState>('idle')
+  const [templatesError, setTemplatesError] = useState<string | null>(null)
 
-  const [params, setParams] = useState<RelazioneTecnicaParams>({
-    nomeCommittente: '',
-    cognomeCommittente: '',
-    indirizzoCommittente: '',
-    codiceProgetto: '',
-    dataGenerazioneDocumento: '',
-    tipoDiCavo: '',
-    luogoInstallazione: 'box condominiale',
-    descrizioneProgetto: '',
-    alimentazioneSgancio: '',
-    tensioneAlimentazione: '230',
-    potenzaWallbox: '',
-    temperaturaAmbiente: '',
-    temperaturaTerreno: '',
-    revisioni: [],
-  })
+  const selectedTemplate =
+    templates.find((t) => t.id === templateId) ?? null
+
+  const [params, setParams] = useState<RelazioneTecnicaParams>(() =>
+    defaultRelazioneParams(),
+  )
 
   const [compileState, setCompileState] = useState<CompileState>({
     status: 'idle',
   })
 
   useEffect(() => {
-    const template = TEMPLATES.find((t) => t.id === templateId) ?? null
-    setSelectedTemplate(template)
+    let cancelled = false
+    setTemplatesState('loading')
+    setTemplatesError(null)
+    fetchTemplates()
+      .then((list) => {
+        if (!cancelled) {
+          setTemplates(list)
+          setTemplatesState('loaded')
+        }
+      })
+      .catch((e: unknown) => {
+        if (!cancelled) {
+          setTemplatesError(
+            e instanceof Error ? e.message : 'Errore di connessione',
+          )
+          setTemplatesState('error')
+        }
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  useEffect(() => {
+    if (templatesState !== 'loaded' || !templateId) return
+    if (!templates.some((t) => t.id === templateId)) {
+      navigate('/', { replace: true })
+    }
+  }, [templatesState, templateId, templates, navigate])
+
+  useEffect(() => {
     setCompileState({ status: 'idle' })
 
-    if (template?.id === 'template-di-prova') {
-      setParams({
-        nomeCommittente: 'Mario',
-        cognomeCommittente: 'Rossi',
-        indirizzoCommittente: 'Via Roma 1, Milano',
-        codiceProgetto: 'TEST-001',
-        dataGenerazioneDocumento: '2026-03-09',
-        tipoDiCavo: 'FG16OR16 3G6 mm²',
-        luogoInstallazione: 'box condominiale',
-        descrizioneProgetto:
-          'Installazione di wallbox per ricarica veicolo elettrico in box condominiale.',
-        alimentazioneSgancio: '230 V AC',
-        tensioneAlimentazione: '230',
-        potenzaWallbox: '7,4',
-        temperaturaAmbiente: '25',
-        temperaturaTerreno: '20',
-        revisioni: [
-          {
-            numRevisione: '0',
-            data: '2026-03-09',
-            descrizioneRevisione: 'Prima emissione di prova',
-          },
-        ],
-      })
+    if (selectedTemplate?.id === 'template-di-prova') {
+      setParams(
+        defaultRelazioneParams({
+          revisionDescription: 'Prima emissione di prova',
+          codiceProgetto: 'TEST-001',
+          temperaturaAmbiente: '25',
+        }),
+      )
     } else {
-      setParams({
-        nomeCommittente: '',
-        cognomeCommittente: '',
-        indirizzoCommittente: '',
-        codiceProgetto: '',
-        dataGenerazioneDocumento: '',
-        tipoDiCavo: '',
-        luogoInstallazione: 'box condominiale',
-        descrizioneProgetto: '',
-        alimentazioneSgancio: '',
-        tensioneAlimentazione: '230',
-        potenzaWallbox: '',
-        temperaturaAmbiente: '',
-        temperaturaTerreno: '',
-        revisioni: [],
-      })
+      setParams(defaultRelazioneParams())
     }
-  }, [templateId])
+  }, [templateId, selectedTemplate?.id])
 
   const handleChange = (
     field: keyof RelazioneTecnicaParams,
@@ -257,10 +272,11 @@ function App() {
     try {
       const authHeader =
         authState.status === 'authenticated' ? authState.authHeader : null
-      const projectPath =
-        selectedTemplate?.projectPath ??
-        'relazione-tecnico-specialistica-domestico-tt-cpi'
-      const blob = await compileRelazioneTecnica(params, authHeader, projectPath)
+      const slug = selectedTemplate?.id
+      if (!slug) {
+        throw new Error('Nessun template selezionato.')
+      }
+      const blob = await compileRelazioneTecnica(params, authHeader, slug)
       const url = URL.createObjectURL(blob)
       setCompileState({ status: 'success', pdfUrl: url })
     } catch (error) {
@@ -273,10 +289,10 @@ function App() {
   }
 
   const handleDownload = () => {
-    if (compileState.status !== 'success') return
+    if (compileState.status !== 'success' || !selectedTemplate) return
     const link = document.createElement('a')
     link.href = compileState.pdfUrl
-    link.download = 'relazione-tecnico-specialistica-domestico-tt-cpi.pdf'
+    link.download = `${selectedTemplate.id}.pdf`
     link.click()
   }
 
@@ -286,6 +302,22 @@ function App() {
 
   const handleChangeTemplate = () => {
     navigate('/')
+  }
+
+  if (templatesState === 'loading') {
+    return (
+      <div className="app-root">
+        <p className="preview-placeholder">Caricamento template…</p>
+      </div>
+    )
+  }
+
+  if (templatesState === 'error') {
+    return (
+      <div className="app-root">
+        <p className="error-message">{templatesError}</p>
+      </div>
+    )
   }
 
   if (!selectedTemplate) {
@@ -309,7 +341,7 @@ function App() {
     return (
       <div className="app-root">
         <TemplateList
-          templates={TEMPLATES}
+          templates={templates}
           onSelect={handleSelectTemplate}
           headerRight={headerRight}
           greetingUsername={
@@ -343,7 +375,11 @@ function App() {
           )}
         </div>
         <div className="app-header-right">
-          <span className="app-template-badge">1 template disponibile</span>
+          <span className="app-template-badge">
+            {templates.length === 1
+              ? '1 template disponibile'
+              : `${templates.length} template disponibili`}
+          </span>
           {authState.status === 'authenticated' && (
             <>
               {authState.role === 'superuser' && (

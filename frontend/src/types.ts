@@ -27,15 +27,10 @@ export type CompileState =
   | { status: 'success'; pdfUrl: string }
   | { status: 'error'; message: string }
 
-export type TemplateId =
-  | 'relazione-tecnico-specialistica-domestico-tt-cpi'
-  | 'template-di-prova'
-
+/** Allineato alla risposta di GET /api/templates (manifest lato backend). */
 export type TemplateDefinition = {
-  id: TemplateId
+  id: string
   name: string
   description: string
   tag: string
-  projectPath: string
 }
-
