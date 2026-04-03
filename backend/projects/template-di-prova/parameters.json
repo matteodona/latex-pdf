@@ -1,0 +1,11 @@
+{
+  "bindings": [
+    { "target": "main.tex", "placeholder": "titoloDocumento", "source": "titoloDocumento", "transform": "as_string" },
+    { "target": "main.tex", "placeholder": "sottotitolo", "source": "sottotitolo", "transform": "as_string" },
+    { "target": "main.tex", "placeholder": "intestazioneCommittente", "source": "intestazioneCommittente", "transform": "as_string" },
+    { "target": "main.tex", "placeholder": "dettaglioImpianto", "source": "dettaglioImpianto", "transform": "as_string" },
+    { "target": "main.tex", "placeholder": "dataDocumento", "source": "dataDocumento", "transform": "as_string" },
+    { "target": "sections/footer.tex", "placeholder": "codiceProgetto", "source": "codiceProgetto", "transform": "as_string" },
+    { "target": "sections/footer.tex", "placeholder": "dataGenerazioneDocumento", "source": "dataGenerazioneDocumento", "transform": "date_dd_mm_yyyy" }
+  ]
+}

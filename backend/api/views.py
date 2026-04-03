@@ -10,7 +10,13 @@ from accounts.models import User
 
 from .auth_basic import basic_auth_required, get_basic_user, superuser_required
 from .compile_latex import compile_to_pdf
-from .templates_registry import list_templates, resolve_template_project_dir
+from .schema_validation import validate_params
+from .template_adapters import adapt_compile_params, ensure_codice_progetto
+from .templates_registry import (
+    get_template_manifest,
+    list_templates,
+    resolve_template_project_dir,
+)
 
 PROJECTS_BASE = Path(settings.BASE_DIR) / 'projects'
 
@@ -85,6 +91,15 @@ def template_list(request):
 
 
 @csrf_exempt
+@require_http_methods(['GET'])
+def template_detail(request, slug):
+    manifest, err_msg = get_template_manifest(PROJECTS_BASE, slug)
+    if manifest is None:
+        return JsonResponse({'error': err_msg or 'template non trovato'}, status=404)
+    return JsonResponse({'template': manifest})
+
+
+@csrf_exempt
 @require_http_methods(['POST'])
 @basic_auth_required
 def compile_template_by_slug(request, slug):
@@ -93,16 +108,34 @@ def compile_template_by_slug(request, slug):
     except json.JSONDecodeError:
         return JsonResponse({'error': 'JSON non valido'}, status=400)
 
-    params = body.get('params') or {}
-    if not isinstance(params, dict):
-        params = {}
-
+    template_manifest, manifest_err = get_template_manifest(PROJECTS_BASE, slug)
+    if template_manifest is None:
+        return JsonResponse({'error': manifest_err or 'template non trovato'}, status=404)
     project_dir, err_msg = resolve_template_project_dir(PROJECTS_BASE, slug)
     if project_dir is None:
         return JsonResponse({'error': err_msg or 'template non trovato'}, status=404)
 
+    params = body.get('params') or {}
+    if not isinstance(params, dict):
+        params = {}
+    ensure_codice_progetto(params, template_manifest, project_dir)
+    if (
+        isinstance(template_manifest.get('form_schema'), dict)
+        and template_manifest['form_schema'].get('fields')
+    ):
+        errors = validate_params(template_manifest['form_schema'], params)
+        if errors:
+            return JsonResponse(
+                {
+                    'error': 'Payload non valido',
+                    'fields': errors,
+                },
+                status=400,
+            )
+    params_for_compile = adapt_compile_params(template_manifest, params, project_dir)
+
     try:
-        pdf_path = compile_to_pdf(project_dir, params)
+        pdf_path = compile_to_pdf(project_dir, params_for_compile)
     except FileNotFoundError as e:
         return JsonResponse({'error': str(e)}, status=500)
     except RuntimeError as e:

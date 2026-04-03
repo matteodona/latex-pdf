@@ -1,0 +1,31 @@
+{
+  "bindings": [
+    { "target": "sections/fontespizio.tex", "placeholder": "nomeCommittente", "source": "nomeCommittente", "transform": "as_string" },
+    { "target": "sections/fontespizio.tex", "placeholder": "cognomeCommittente", "source": "cognomeCommittente", "transform": "as_string" },
+    { "target": "sections/fontespizio.tex", "placeholder": "indirizzoCommittente", "source": "indirizzoCommittente", "transform": "as_string" },
+    { "target": "sections/fontespizio.tex", "placeholder": "tabellaRevisioni", "transform": "revision_table" },
+
+    { "target": "sections/chapters/01-premessa.tex", "placeholder": "nomeCommittente", "source": "nomeCommittente", "transform": "as_string" },
+    { "target": "sections/chapters/01-premessa.tex", "placeholder": "cognomeCommittente", "source": "cognomeCommittente", "transform": "as_string" },
+    { "target": "sections/chapters/01-premessa.tex", "placeholder": "indirizzoCommittente", "source": "indirizzoCommittente", "transform": "as_string" },
+
+    { "target": "sections/footer.tex", "placeholder": "codiceProgetto", "source": "codiceProgetto", "transform": "as_string" },
+    { "target": "sections/footer.tex", "placeholder": "dataGenerazioneDocumento", "source": "dataGenerazioneDocumento", "transform": "date_dd_mm_yyyy" },
+    { "target": "sections/footer.tex", "placeholder": "numRevisioneUltima", "transform": "latest_revision_num" },
+
+    { "target": "sections/chapters/03-criteri.tex", "placeholder": "tipiCavoElenco", "source": "tipiDiCavo", "transform": "cable_types_bullets" },
+
+    { "target": "sections/chapters/04-soluzione.tex", "placeholder": "luogoInstallazione", "source": "luogoInstallazione", "transform": "as_string" },
+    { "target": "sections/chapters/04-soluzione.tex", "placeholder": "nomeCommittente", "source": "nomeCommittente", "transform": "as_string" },
+    { "target": "sections/chapters/04-soluzione.tex", "placeholder": "cognomeCommittente", "source": "cognomeCommittente", "transform": "as_string" },
+    { "target": "sections/chapters/04-soluzione.tex", "placeholder": "indirizzoCommittente", "source": "indirizzoCommittente", "transform": "as_string" },
+    { "target": "sections/chapters/04-soluzione.tex", "placeholder": "descrizioneProgetto", "source": "descrizioneProgetto", "transform": "as_string" },
+    { "target": "sections/chapters/04-soluzione.tex", "placeholder": "alimentazioneSgancio", "source": "alimentazioneSgancio", "transform": "as_string" },
+    { "target": "sections/chapters/04-soluzione.tex", "placeholder": "tensioneAlimentazione", "source": "tensioneAlimentazione", "transform": "append_volt" },
+    { "target": "sections/chapters/04-soluzione.tex", "placeholder": "potenzaWallbox", "source": "potenzaWallbox", "transform": "as_string" },
+    { "target": "sections/chapters/04-soluzione.tex", "placeholder": "temperaturaAmbiente", "source": "temperaturaAmbiente", "transform": "as_string" },
+    { "target": "sections/chapters/04-soluzione.tex", "placeholder": "temperaturaTerreno", "source": "temperaturaTerreno", "transform": "as_string" },
+    { "target": "sections/chapters/04-soluzione.tex", "placeholder": "correnteCortoCircuito", "transform": "map_short_circuit" },
+    { "target": "sections/chapters/04-soluzione.tex", "placeholder": "tensioneWallbox", "transform": "map_wallbox_phase" }
+  ]
+}

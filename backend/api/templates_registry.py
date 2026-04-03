@@ -30,6 +30,40 @@ def _load_manifest(project_dir: Path, slug: str) -> dict | None:
     return data
 
 
+def _safe_text(value: object, fallback: str = '') -> str:
+    if isinstance(value, str):
+        return value
+    return fallback
+
+
+def _safe_dict(value: object) -> dict:
+    if isinstance(value, dict):
+        return value
+    return {}
+
+
+def _normalize_manifest(manifest: dict, slug: str) -> dict:
+    app_key = _safe_text(manifest.get('app_key'), 'legacy')
+    manifest_version = _safe_text(manifest.get('manifest_version'), '1')
+    compile_contract = _safe_dict(manifest.get('compile_contract'))
+    form_schema = _safe_dict(manifest.get('form_schema'))
+
+    return {
+        'id': slug,
+        'name': _safe_text(manifest.get('name')),
+        'description': _safe_text(manifest.get('description')),
+        'tag': _safe_text(manifest.get('tag')),
+        'app_key': app_key or 'legacy',
+        'manifest_version': manifest_version or '1',
+        'compile_contract': {
+            'input': _safe_text(compile_contract.get('input'), 'schema'),
+            'output_filename': _safe_text(compile_contract.get('output_filename'), 'main.pdf'),
+        },
+        'form_schema': form_schema,
+        'capabilities': _safe_dict(manifest.get('capabilities')),
+    }
+
+
 def list_templates(projects_base: Path) -> list[dict]:
     """Elenco template validi (cartella + main.tex + template.json coerente)."""
     if not projects_base.is_dir():
@@ -52,15 +86,31 @@ def list_templates(projects_base: Path) -> list[dict]:
         manifest = _load_manifest(project_dir, slug)
         if manifest is None:
             continue
+        normalized = _normalize_manifest(manifest, slug)
         out.append(
             {
-                'id': manifest['id'],
-                'name': manifest['name'],
-                'description': manifest['description'],
-                'tag': manifest['tag'],
+                'id': normalized['id'],
+                'name': normalized['name'],
+                'description': normalized['description'],
+                'tag': normalized['tag'],
+                'app_key': normalized['app_key'],
+                'manifest_version': normalized['manifest_version'],
+                'compile_contract': normalized['compile_contract'],
+                'form_schema': normalized['form_schema'],
+                'capabilities': normalized['capabilities'],
             },
         )
     return out
+
+
+def get_template_manifest(projects_base: Path, slug: str) -> tuple[dict | None, str | None]:
+    project_dir, err_msg = resolve_template_project_dir(projects_base, slug)
+    if project_dir is None:
+        return None, err_msg
+    manifest = _load_manifest(project_dir, slug)
+    if manifest is None:
+        return None, 'template non trovato'
+    return _normalize_manifest(manifest, slug), None
 
 
 def resolve_template_project_dir(projects_base: Path, slug: str) -> tuple[Path | None, str | None]:

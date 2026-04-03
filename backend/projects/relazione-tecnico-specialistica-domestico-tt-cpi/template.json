@@ -2,5 +2,87 @@
   "id": "relazione-tecnico-specialistica-domestico-tt-cpi",
   "name": "Relazione tecnico specialistica DOMESTICO TT CPI",
   "description": "Genera una relazione tecnica completa a partire da pochi parametri essenziali.",
-  "tag": "Impianti elettrici"
+  "tag": "Impianti elettrici",
+  "app_key": "relazione",
+  "manifest_version": "2",
+  "compile_contract": {
+    "input": "schema",
+    "output_filename": "main.pdf"
+  },
+  "parameters_file": "parameters.json",
+  "capabilities": {
+    "auth_required": true
+  },
+  "form_schema": {
+    "title": "Parametri relazione tecnica",
+    "fields": [
+      { "key": "nomeCommittente", "label": "Nome", "type": "text", "required": true, "default": "Mario", "group": "Dati committente" },
+      { "key": "cognomeCommittente", "label": "Cognome", "type": "text", "required": true, "default": "Rossi", "group": "Dati committente" },
+      { "key": "indirizzoCommittente", "label": "Indirizzo", "type": "text", "required": true, "default": "Via Roma 1, 20100 Milano", "group": "Dati committente" },
+      { "key": "dataGenerazioneDocumento", "label": "Data generazione", "type": "date", "required": true, "default": "__TODAY__", "group": "Dati documento" },
+      {
+        "key": "tipiDiCavo",
+        "label": "Tipi di cavo",
+        "type": "checkboxes",
+        "required": true,
+        "options": [
+          "FG 16 (O) M 16",
+          "FG 16 (O) R 16",
+          "FS 17",
+          "LAN"
+        ],
+        "default": [],
+        "group": "Dettagli tecnici"
+      },
+      { "key": "luogoInstallazione", "label": "Luogo installazione", "type": "select", "required": true, "default": "box condominiale", "options": ["box condominiale", "parcheggio condominiale", "posto auto condominiale"], "group": "Dettagli tecnici" },
+      { "key": "tensioneAlimentazione", "label": "Tensione di alimentazione", "type": "select", "required": true, "default": "230", "options": ["230", "400"], "group": "Dettagli tecnici" },
+      { "key": "potenzaWallbox", "label": "Potenza Wallbox (kW)", "type": "text", "required": true, "default": "7,4", "group": "Dettagli tecnici" },
+      { "key": "temperaturaAmbiente", "label": "Temperatura ambiente (°C)", "type": "number", "required": true, "default": "30", "group": "Dettagli tecnici" },
+      { "key": "temperaturaTerreno", "label": "Temperatura terreno (°C)", "type": "number", "required": true, "default": "20", "group": "Dettagli tecnici" },
+      {
+        "key": "descrizioneProgetto",
+        "label": "Descrizione",
+        "type": "textarea",
+        "required": true,
+        "default": "Installazione di wallbox per ricarica veicolo elettrico in box condominiale.",
+        "group": "Descrizione progetto",
+        "presets": [
+          {
+            "label": "Installazione in box condominiale",
+            "text": "Progetto per l'installazione di una stazione di ricarica per veicoli elettrici (wallbox) in box condominiale, con adeguamento della linea di alimentazione, delle protezioni contro le sovracorrenti e del sistema equipotenziale, nel rispetto del D.M. 22/01/2008 n. 37, del regolamento di condominio e delle prescrizioni antincendio applicabili."
+          },
+          {
+            "label": "Area parcheggio condominiale",
+            "text": "Intervento finalizzato alla realizzazione dell'infrastruttura per la ricarica di veicoli elettrici in area di parcheggio condominiale coperta o scoperta, inclusa la definizione dei percorsi cavi, la selettiva dell'alimentazione e la segnaletica di sicurezza, in conformità alle norme CEI e alle indicazioni del coordinatore per la sicurezza ove previsto."
+          },
+          {
+            "label": "Posto auto condominiale",
+            "text": "Descrizione dell'impianto per la fornitura di energia elettrica a una colonnina di ricarica in corrispondenza di posto auto condominiale, con verifica della disponibilità di potenza a monte, dimensionamento dei cavi in funzione della corrente di impiego e delle cadute di tensione ammissibili, e predisposizione alla lettura dell'energia prelevata ove richiesto."
+          },
+          {
+            "label": "Adeguamento impianto esistente",
+            "text": "Il presente intervento prevede l'adeguamento dell'impianto elettrico esistente per consentire l'installazione della stazione di ricarica, mediante verifica dei quadri, dei cavi e delle protezioni, e l'eventuale potenziamento della linea fino al punto di utilizzo, nel rispetto del grado di isolamento e delle condizioni ambientali di posa previste dalla normativa di prodotto e di installazione."
+          }
+        ]
+      },
+      { "key": "alimentazioneSgancio", "label": "Alimentazione sgancio", "type": "text", "required": true, "default": "230 V AC", "group": "Descrizione progetto" },
+      {
+        "key": "revisioni",
+        "label": "Elenco revisioni",
+        "type": "array",
+        "required": true,
+        "group": "Revisioni",
+        "default": [
+          { "numRevisione": "0", "data": "__TODAY__", "descrizioneRevisione": "Emissione documento" }
+        ],
+        "item": {
+          "fields": [
+            { "key": "numRevisione", "label": "Revisione", "type": "text", "required": true },
+            { "key": "data", "label": "Data", "type": "date", "required": true },
+            { "key": "descrizioneRevisione", "label": "Descrizione", "type": "text", "required": true }
+          ]
+        }
+      }
+    ]
+  }
 }

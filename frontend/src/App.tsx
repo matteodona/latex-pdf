@@ -4,156 +4,122 @@ import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 
-import type {
-  CompileState,
-  RelazioneTecnicaParams,
-  TemplateDefinition,
-} from './types'
+import type { CompileState, TemplateDefinition } from './types'
 import { TemplateList } from './components/TemplateList'
-import { RelazioneTecnicaForm } from './components/RelazioneTecnicaForm'
+import { DynamicTemplateForm } from './components/DynamicTemplateForm'
 import { PdfPreview } from './components/PdfPreview'
 import { useAuth } from './auth/AuthContext'
-
-const API_BASE_URL =
-  import.meta.env.VITE_BACKEND_URL ?? 'http://localhost:3001'
+import {
+  compileTemplate,
+  getTemplateSchema,
+  listTemplates,
+} from './api/templatesApi'
 
 type TemplatesLoadState = 'idle' | 'loading' | 'loaded' | 'error'
 
-async function fetchTemplates(): Promise<TemplateDefinition[]> {
-  const response = await fetch(`${API_BASE_URL}/api/templates`)
-  if (!response.ok) {
-    throw new Error('Impossibile caricare l’elenco dei template.')
-  }
-  const data = (await response.json()) as { templates?: TemplateDefinition[] }
-  return data.templates ?? []
+function todayString(): string {
+  return new Date().toISOString().slice(0, 10)
 }
 
-/** Valori iniziali del form (data revisione 0 allineata alla data documento). */
-function defaultRelazioneParams(options?: {
-  revisionDescription?: string
-  codiceProgetto?: string
-  temperaturaAmbiente?: string
-}): RelazioneTecnicaParams {
-  const today = new Date().toISOString().slice(0, 10)
-  return {
-    nomeCommittente: 'Mario',
-    cognomeCommittente: 'Rossi',
-    indirizzoCommittente: 'Via Roma 1, 20100 Milano',
-    codiceProgetto: options?.codiceProgetto ?? 'PROG-2026-001',
-    dataGenerazioneDocumento: today,
-    tipoDiCavo: 'FG16OR16 3G6 mm²',
-    luogoInstallazione: 'box condominiale',
-    descrizioneProgetto:
-      'Installazione di wallbox per ricarica veicolo elettrico in box condominiale.',
-    alimentazioneSgancio: '230 V AC',
-    tensioneAlimentazione: '230',
-    potenzaWallbox: '7,4',
-    temperaturaAmbiente: options?.temperaturaAmbiente ?? '30',
-    temperaturaTerreno: '20',
-    revisioni: [
+function resolveDefaultValue(value: unknown): unknown {
+  if (value === '__TODAY__') {
+    return todayString()
+  }
+  if (Array.isArray(value)) {
+    return value.map((item) => {
+      if (item && typeof item === 'object') {
+        return Object.fromEntries(
+          Object.entries(item as Record<string, unknown>).map(([key, val]) => [
+            key,
+            resolveDefaultValue(val),
+          ]),
+        )
+      }
+      return item
+    })
+  }
+  return value
+}
+
+function defaultParamsFromTemplate(template: TemplateDefinition | null) {
+  const fields = template?.form_schema?.fields ?? []
+  const out: Record<string, unknown> = {}
+  for (const field of fields) {
+    const key = field.key
+    if (!key) continue
+    if (field.default !== undefined) {
+      out[key] = resolveDefaultValue(field.default)
+      continue
+    }
+    if (field.type === 'array') {
+      out[key] = []
+      continue
+    }
+    if (field.type === 'checkboxes') {
+      out[key] = Array.isArray(field.default) ? [...field.default] : []
+      continue
+    }
+    if (field.type === 'boolean') {
+      out[key] = false
+      continue
+    }
+    out[key] = ''
+  }
+  if (typeof out.dataGenerazioneDocumento !== 'string') {
+    out.dataGenerazioneDocumento = todayString()
+  }
+  if (typeof out.dataDocumento !== 'string') {
+    out.dataDocumento = todayString()
+  }
+  if (!Array.isArray(out.revisioni)) {
+    out.revisioni = [
       {
         numRevisione: '0',
-        data: today,
-        descrizioneRevisione:
-          options?.revisionDescription ?? 'Emissione documento',
+        data: todayString(),
+        descrizioneRevisione: 'Emissione documento',
       },
-    ],
+    ]
   }
+  return out
 }
 
-async function compileRelazioneTecnica(
-  params: RelazioneTecnicaParams,
+function syncRevisionsWithDocumentDate(params: Record<string, unknown>) {
+  const date =
+    typeof params.dataGenerazioneDocumento === 'string'
+      ? params.dataGenerazioneDocumento
+      : todayString()
+  const revisioni = Array.isArray(params.revisioni) ? params.revisioni : []
+  if (revisioni.length === 0) {
+    return [
+      {
+        numRevisione: '0',
+        data: date,
+        descrizioneRevisione: 'Emissione documento',
+      },
+    ]
+  }
+  return revisioni.map((row, index) => {
+    const current =
+      row && typeof row === 'object' ? (row as Record<string, unknown>) : {}
+    return {
+      ...current,
+      numRevisione: index === 0 ? '0' : String(current.numRevisione ?? ''),
+      data: index === 0 ? date : String(current.data ?? ''),
+      descrizioneRevisione: String(current.descrizioneRevisione ?? ''),
+    }
+  })
+}
+
+async function compileTemplatePdf(
+  params: Record<string, unknown>,
   authHeader: string | null,
   templateSlug: string,
 ): Promise<Blob> {
-  const tabellaRevisioni =
-    params.revisioni.length === 0
-      ? [
-          {
-            numRevisione: '0',
-            data: params.dataGenerazioneDocumento,
-            descrizioneRevisione: 'Emissione documento',
-          },
-        ]
-      : params.revisioni.map((rev, index) => ({
-          numRevisione: index === 0 ? '0' : rev.numRevisione,
-          data:
-            index === 0 ? params.dataGenerazioneDocumento : rev.data,
-          descrizioneRevisione: rev.descrizioneRevisione,
-        }))
-
-  const tensioneAlimentazioneLatex = `${params.tensioneAlimentazione}\\,V`
-  const correnteCortoCircuito =
-    params.tensioneAlimentazione === '230' ? '6' : '10'
-  const tensioneWallbox =
-    params.tensioneAlimentazione === '230' ? 'F' : '3F'
-
   const body = {
-    params: {
-      sections: {
-        fontespizio: {
-          nomeCommittente: params.nomeCommittente,
-          cognomeCommittente: params.cognomeCommittente,
-          indirizzoCommittente: params.indirizzoCommittente,
-          tabellaRevisioni,
-        },
-        footer: {
-          codiceProgetto: params.codiceProgetto,
-          dataGenerazioneDocumento: params.dataGenerazioneDocumento,
-        },
-        chapters: {
-          '03-criteri': {
-            tipoDiCavo: params.tipoDiCavo,
-          },
-          '04-soluzione': {
-            luogoInstallazione: params.luogoInstallazione,
-            nomeCommittente: params.nomeCommittente,
-            cognomeCommittente: params.cognomeCommittente,
-            indirizzoCommittente: params.indirizzoCommittente,
-            descrizioneProgetto: params.descrizioneProgetto,
-            alimentazioneSgancio: params.alimentazioneSgancio,
-            tensioneAlimentazione: tensioneAlimentazioneLatex,
-            potenzaWallbox: params.potenzaWallbox,
-            temperaturaAmbiente: params.temperaturaAmbiente,
-            temperaturaTerreno: params.temperaturaTerreno,
-            correnteCortoCircuito,
-            tensioneWallbox,
-          },
-        },
-      },
-    },
+    ...params,
+    revisioni: syncRevisionsWithDocumentDate(params),
   }
-
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-  }
-  if (authHeader) {
-    headers.Authorization = authHeader
-  }
-
-  const response = await fetch(
-    `${API_BASE_URL}/api/templates/${encodeURIComponent(templateSlug)}/compile`,
-    {
-      method: 'POST',
-      headers,
-      body: JSON.stringify(body),
-    },
-  )
-
-  if (!response.ok) {
-    let message = 'Errore durante la compilazione del PDF.'
-    try {
-      const data = (await response.json()) as { error?: string }
-      if (data?.error) {
-        message = data.error
-      }
-    } catch {
-      // se non è JSON, manteniamo il messaggio generico
-    }
-    throw new Error(message)
-  }
-
-  return response.blob()
+  return compileTemplate(templateSlug, body, authHeader)
 }
 
 function App() {
@@ -165,23 +131,18 @@ function App() {
   const [templatesState, setTemplatesState] =
     useState<TemplatesLoadState>('idle')
   const [templatesError, setTemplatesError] = useState<string | null>(null)
-
-  const selectedTemplate =
-    templates.find((t) => t.id === templateId) ?? null
-
-  const [params, setParams] = useState<RelazioneTecnicaParams>(() =>
-    defaultRelazioneParams(),
-  )
-
+  const [params, setParams] = useState<Record<string, unknown>>({})
   const [compileState, setCompileState] = useState<CompileState>({
     status: 'idle',
   })
+
+  const selectedTemplate = templates.find((t) => t.id === templateId) ?? null
 
   useEffect(() => {
     let cancelled = false
     setTemplatesState('loading')
     setTemplatesError(null)
-    fetchTemplates()
+    listTemplates()
       .then((list) => {
         if (!cancelled) {
           setTemplates(list)
@@ -209,66 +170,34 @@ function App() {
   }, [templatesState, templateId, templates, navigate])
 
   useEffect(() => {
+    if (!selectedTemplate) return
+    let cancelled = false
     setCompileState({ status: 'idle' })
-
-    if (selectedTemplate?.id === 'template-di-prova') {
-      setParams(
-        defaultRelazioneParams({
-          revisionDescription: 'Prima emissione di prova',
-          codiceProgetto: 'TEST-001',
-          temperaturaAmbiente: '25',
-        }),
-      )
-    } else {
-      setParams(defaultRelazioneParams())
+    getTemplateSchema(selectedTemplate.id)
+      .then((fullTemplate) => {
+        if (cancelled) return
+        setTemplates((prev) =>
+          prev.map((item) => (item.id === fullTemplate.id ? fullTemplate : item)),
+        )
+        setParams(defaultParamsFromTemplate(fullTemplate))
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setParams(defaultParamsFromTemplate(selectedTemplate))
+        }
+      })
+    return () => {
+      cancelled = true
     }
-  }, [templateId, selectedTemplate?.id])
+  }, [selectedTemplate?.id])
 
-  const handleChange = (
-    field: keyof RelazioneTecnicaParams,
-    value: string,
-  ) => {
-    setParams((prev) => ({ ...prev, [field]: value }))
-  }
-
-  const handleRevisionChange = (
-    index: number,
-    field: 'numRevisione' | 'data' | 'descrizioneRevisione',
-    value: string,
-  ) => {
-    setParams((prev) => {
-      const revisioni = [...prev.revisioni]
-      const current = revisioni[index] ?? {
-        numRevisione: '',
-        data: '',
-        descrizioneRevisione: '',
-      }
-      revisioni[index] = { ...current, [field]: value }
-      return { ...prev, revisioni }
-    })
-  }
-
-  const handleAddRevision = () => {
-    setParams((prev) => ({
-      ...prev,
-      revisioni: [
-        ...prev.revisioni,
-        { numRevisione: '', data: '', descrizioneRevisione: '' },
-      ],
-    }))
-  }
-
-  const handleRemoveRevision = (index: number) => {
-    setParams((prev) => ({
-      ...prev,
-      revisioni: prev.revisioni.filter((_, i) => i !== index),
-    }))
+  const handleValueChange = (key: string, value: unknown) => {
+    setParams((prev) => ({ ...prev, [key]: value }))
   }
 
   const handleGeneratePdf = async (event: FormEvent) => {
     event.preventDefault()
     setCompileState({ status: 'loading' })
-
     try {
       const authHeader =
         authState.status === 'authenticated' ? authState.authHeader : null
@@ -276,14 +205,14 @@ function App() {
       if (!slug) {
         throw new Error('Nessun template selezionato.')
       }
-      const blob = await compileRelazioneTecnica(params, authHeader, slug)
+      const blob = await compileTemplatePdf(params, authHeader, slug)
       const url = URL.createObjectURL(blob)
       setCompileState({ status: 'success', pdfUrl: url })
     } catch (error) {
       const message =
         error instanceof Error
           ? error.message
-          : 'Si è verificato un errore imprevisto.'
+          : 'Si e verificato un errore imprevisto.'
       setCompileState({ status: 'error', message })
     }
   }
@@ -300,14 +229,10 @@ function App() {
     navigate(`/${template.id}`)
   }
 
-  const handleChangeTemplate = () => {
-    navigate('/')
-  }
-
   if (templatesState === 'loading') {
     return (
       <div className="app-root">
-        <p className="preview-placeholder">Caricamento template…</p>
+        <p className="preview-placeholder">Caricamento template...</p>
       </div>
     )
   }
@@ -329,11 +254,7 @@ function App() {
               Admin
             </Link>
           )}
-          <button
-            type="button"
-            className="secondary small"
-            onClick={logout}
-          >
+          <button type="button" className="secondary small" onClick={logout}>
             Esci ({authState.username})
           </button>
         </>
@@ -359,7 +280,7 @@ function App() {
           <button
             type="button"
             className="back-button"
-            onClick={handleChangeTemplate}
+            onClick={() => navigate('/')}
           >
             <span className="back-icon">←</span>
             <span>Tutti i template</span>
@@ -401,18 +322,15 @@ function App() {
 
       <main className="app-main">
         <section className="pane pane-left">
-          <RelazioneTecnicaForm
-            params={params}
+          <DynamicTemplateForm
+            schema={selectedTemplate.form_schema}
+            values={params}
             compileState={compileState}
-            onChange={handleChange}
-            onRevisionChange={handleRevisionChange}
-            onAddRevision={handleAddRevision}
-            onRemoveRevision={handleRemoveRevision}
+            onValueChange={handleValueChange}
             onSubmit={handleGeneratePdf}
             onDownload={handleDownload}
           />
         </section>
-
         <section className="pane pane-right">
           <PdfPreview compileState={compileState} />
         </section>

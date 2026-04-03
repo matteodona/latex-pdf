@@ -1,0 +1,9 @@
+{
+  "bindings": [
+    { "target": "main.tex", "placeholder": "luogoData", "source": "luogoData", "transform": "as_string" },
+    { "target": "main.tex", "placeholder": "oggetto", "source": "oggetto", "transform": "as_string" },
+    { "target": "main.tex", "placeholder": "destinatario", "source": "destinatario", "transform": "as_string" },
+    { "target": "main.tex", "placeholder": "corpo", "source": "corpo", "transform": "as_string" },
+    { "target": "main.tex", "placeholder": "firma", "source": "firma", "transform": "as_string" }
+  ]
+}

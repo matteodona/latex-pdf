@@ -1,0 +1,11 @@
+{
+  "bindings": [
+    { "target": "main.tex", "placeholder": "titoloChecklist", "source": "titoloChecklist", "transform": "as_string" },
+    { "target": "main.tex", "placeholder": "tecnico", "source": "tecnico", "transform": "as_string" },
+    { "target": "main.tex", "placeholder": "sito", "source": "sito", "transform": "as_string" },
+    { "target": "main.tex", "placeholder": "dataSopralluogo", "source": "dataSopralluogo", "transform": "as_string" },
+    { "target": "main.tex", "placeholder": "statoAlimentazione", "source": "statoAlimentazione", "transform": "as_string" },
+    { "target": "main.tex", "placeholder": "esito", "source": "esito", "transform": "as_string" },
+    { "target": "main.tex", "placeholder": "note", "source": "note", "transform": "as_string" }
+  ]
+}

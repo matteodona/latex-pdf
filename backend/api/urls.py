@@ -7,6 +7,7 @@ urlpatterns = [
     path('auth/register', views.register),
     path('auth/check', views.auth_check),
     path('templates', views.template_list),
+    path('templates/<slug:slug>', views.template_detail),
     path('templates/<slug:slug>/compile', views.compile_template_by_slug),
     path('admin/pending-users', views.admin_pending_users),
     path('admin/users', views.admin_users),
