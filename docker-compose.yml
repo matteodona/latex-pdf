@@ -1,0 +1,43 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: latex-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-latex}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-latex}
+      POSTGRES_DB: ${POSTGRES_DB:-latex}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: ./backend
+    container_name: latex-backend
+    ports:
+      - '8000:8000'
+    volumes:
+      - ./backend/projects:/app/projects:ro
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings.base
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY:-change-me-in-production}
+      - DJANGO_ALLOWED_HOSTS=${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1,backend}
+      - FRONTEND_URL=http://localhost:8080
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-latex}:${POSTGRES_PASSWORD:-latex}@postgres:5432/${POSTGRES_DB:-latex}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  frontend:
+    build: ./frontend
+    container_name: latex-frontend
+    ports:
+      - '8080:80'
+    environment:
+      - VITE_BACKEND_URL=http://localhost:8000
+
+volumes:
+  postgres-data:

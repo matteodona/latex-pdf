@@ -1,109 +1,48 @@
-# latex-pdf-backend
+# Backend Django
 
-Tutto il progetto è in questa cartella: compilazione LaTeX, parametri per file, server API per il frontend.
+Server API per autenticazione (Basic Auth), amministrazione utenti custom e **compilazione PDF** da progetti LaTeX in `projects/`.
 
 ## Requisiti
 
-- Node.js ≥ 16
-- TeX Live (o MacTeX) con `pdflatex` nel PATH
+- Python **3.12+** consigliato
+- Dipendenze: `pip install -r requirements.txt`
+- **PostgreSQL** se usi `DATABASE_URL`, altrimenti SQLite in `data/db.sqlite3`
+- **pdflatex** nel `PATH` per generazione PDF (in Docker è incluso nell’immagine)
 
-## Installazione e avvio
+## Configurazione
+
+Copiare `.env.example` in `.env` e impostare almeno:
+
+- `DATABASE_URL` (opzionale: senza di essa si usa SQLite)
+- In produzione con `config.settings.base`: `DJANGO_SECRET_KEY`, `DJANGO_ALLOWED_HOSTS`
+
+Impostazioni:
+
+- **`config.settings.development`**: debug, `SECRET_KEY` di default per sviluppo (vedi `manage.py`)
+- **`config.settings.base`**: produzione (`DEBUG=False`), usata dal Dockerfile
+
+## Comandi utili
 
 ```bash
-cd backend
-npm install
-npm start
+python manage.py migrate
+python manage.py runserver 0.0.0.0:8000
+python manage.py create_superuser USERNAME 'PASSWORD'
 ```
 
-Server in ascolto su http://localhost:3001 (o `PORT` se impostata).
-
-## Struttura
+## Struttura (principale)
 
 ```
 backend/
-├── projects/                    # Un progetto per sottocartella
-│   └── relazione-tecnico-specialistica-domestico-tt-cpi/  # Progetto LaTeX
-├── src/                         # Modulo compilazione
-│   ├── compileLatex.js
-│   └── index.js
-├── examples/
-│   └── compile.js
-├── index.js                     # Server Express (API)
-├── package.json
-└── README.md
+├── manage.py
+├── requirements.txt
+├── config/                 # settings, urls, wsgi
+├── accounts/               # modello User custom, migrazioni
+├── api/                    # viste REST, compile_latex, registry template
+└── projects/               # Un sottoprogetto LaTeX per cartella (template)
 ```
 
-Per aggiungere un nuovo tipo di documento: crea una sottocartella in `projects/` (es. `projects/preventivo/`) con il suo albero LaTeX e usa `projectPath: "preventivo"` nell’API.
+## Documentazione estesa
 
-## Script
-
-| Comando | Descrizione |
-|--------|-------------|
-| `npm start` | Avvia il server API (porta 3001) |
-| `npm run compile` | Compila il progetto Relazione tecnico specialistica DOMESTICO TT CPI con l’esempio |
-
-## API
-
-### GET /api/health
-
-Health check. Risposta: `{ "status": "ok", "timestamp": "..." }`.
-
-### POST /api/compile
-
-Compila e restituisce il PDF.
-
-**Body (JSON):**
-```json
-{
-  "projectPath": "relazione-tecnico-specialistica-domestico-tt-cpi",
-  "params": {
-    "sections": {
-      "fontespizio": { "nomeCommittente": "...", "cognomeCommittente": "...", "indirizzoCommittente": "...", "tabellaRevisioni": [...] },
-      "footer": { "codiceProgetto": "...", "dataGenerazioneDocumento": "..." },
-      "chapters": {
-        "03-criteri": { "tipoDiCavo": "..." },
-        "04-soluzione": { "luogoInstallazione": "...", ... }
-      }
-    }
-  }
-}
-```
-
-- **projectPath** (obbligatorio): nome della sottocartella in `projects/`
-  (es. `"relazione-tecnico-specialistica-domestico-tt-cpi"`).
-- **params** (opzionale): struttura che ricalca cartelle/file del progetto scelto.
-
-**Successo 200:** corpo = PDF (attachment). **Errore 400/500:** `{ "error": "messaggio" }`.
-
-**Esempio dal frontend:**
-```js
-const res = await fetch('http://localhost:3001/api/compile', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    projectPath: 'relazione-tecnico-specialistica-domestico-tt-cpi',
-    params: { ... },
-  }),
-});
-const blob = await res.blob();
-// es. URL.createObjectURL(blob) per anteprima o download
-```
-
-## Uso modulo (da script)
-
-```js
-const path = require('path');
-const { compileToPdf } = require('./src');
-const pdfPath = compileToPdf(
-  path.join(__dirname, 'projects', 'relazione-tecnico-specialistica-domestico-tt-cpi'),
-  paramsStructure,
-);
-```
-
-## Placeholder nei .tex
-
-Nei file `.tex` usa `\{nomeParametro\}` (es. `\{nomeCommittente\}`, `\{codiceProgetto\}`). Per la tabella revisioni: parametro `tabellaRevisioni` (array di `{ numRevisione, data, descrizioneRevisione }`).
-
-## Licenza
-
-MIT
+- Setup Docker, Postgres, variabili: [../docs/SETUP-E-DEPLOY.md](../docs/SETUP-E-DEPLOY.md)
+- API e autenticazione: [../docs/API-E-AUTENTICAZIONE.md](../docs/API-E-AUTENTICAZIONE.md)
+- Template LaTeX: [../docs/TEMPLATE-E-COMPILAZIONE.md](../docs/TEMPLATE-E-COMPILAZIONE.md)
