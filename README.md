@@ -1,27 +1,54 @@
-## Generatore di template per documenti tecnici
+# Generatore di template per documenti tecnici
 
-Guida minima per avviare il progetto in sviluppo locale.
+Applicazione **Django + React (Vite)** per generare PDF da template LaTeX.
 
-### Requisiti
+**Su questo branch** il progetto è pensato per essere **avviato in locale** (nessun Docker Compose nel repository). Servono due processi: backend sulla porta **3001** e frontend sulla porta **5173**.
 
-- Python 3.12+
-- Node.js + npm
-- TeX Live / MacTeX con `pdflatex` nel PATH
+---
 
-### 1) Avvio backend (Django)
+## Requisiti
+
+- **Python 3.12+**
+- **Node.js** e **npm**
+- **TeX Live** (o MacTeX) con `pdflatex` nel `PATH` (necessario per la generazione PDF)
+
+---
+
+## Avvio in locale
+
+Usa **due terminali** (o due schede nel terminale).
+
+### 1. Backend (Django)
 
 ```bash
 cd backend
 python3 -m venv .venv
-source .venv/bin/activate
+source .venv/bin/activate          # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 python manage.py migrate
+```
+
+Imposta l’origine del frontend per **CORS** (deve coincidere con dove apri il browser, di solito `http://localhost:5173`):
+
+```bash
 export FRONTEND_URL=http://localhost:5173
+```
+
+**Solo la prima volta** (o se vuoi un nuovo amministratore), crea un superuser:
+
+```bash
 python manage.py create_superuser admin 'TuaPasswordSicura123!'
+```
+
+Avvia il server:
+
+```bash
 python manage.py runserver 0.0.0.0:3001
 ```
 
-### 2) Avvio frontend (Vite)
+Lascia questo terminale aperto. Il backend sarà su **http://localhost:3001**.
+
+### 2. Frontend (Vite)
 
 ```bash
 cd frontend
@@ -30,29 +57,33 @@ export VITE_BACKEND_URL=http://localhost:3001
 npm run dev
 ```
 
-### 3) Uso
+Apri **http://localhost:5173** nel browser e accedi con l’utente creato (o registrati, se previsto dal flusso).
 
-- Apri `http://localhost:5173`
-- Accedi con l'utente creato al passo backend
+---
 
-### Admin frontend (app React)
+## URL utili
 
-- URL: `http://localhost:5173/admin`
-- Come accedere:
-  1. Avvia backend e frontend.
-  2. Apri `http://localhost:5173/login`.
-  3. Fai login con utente `superuser`.
-  4. Vai su `http://localhost:5173/admin` oppure usa il pulsante **Admin** nella home.
+| Cosa | URL |
+|------|-----|
+| App React | http://localhost:5173 |
+| Login | http://localhost:5173/login |
+| Area Admin (app React) | http://localhost:5173/admin (dopo login come superuser) |
+| API (es. health) | http://localhost:3001/api/health |
+| Admin Django (pannello nativo) | http://localhost:3001/admin |
 
-### Admin Django (pannello nativo)
+Per l’admin Django usa le credenziali del **superuser** creato con `create_superuser`.
 
-- URL: `http://localhost:3001/admin`
-- Come accedere:
-  1. Avvia il backend Django su porta `3001`.
-  2. Crea (una sola volta) un superuser con `python manage.py create_superuser ...`.
-  3. Apri `http://localhost:3001/admin` e fai login con quel superuser.
+---
 
-### Note utili
+## Database in sviluppo
 
-- `manage.py` usa già `config.settings.development` di default.
-- Se usi `127.0.0.1` nel browser, imposta anche `FRONTEND_URL=http://127.0.0.1:5173`.
+Con `config.settings.development` (default di `manage.py`) il database è **SQLite** in `backend/data/db.sqlite3`. Non è necessario installare PostgreSQL per lavorare in locale su questo branch.
+
+---
+
+## Note
+
+- `manage.py` usa già **`config.settings.development`**.
+- Se nel browser usi **http://127.0.0.1:5173** invece di `localhost`, imposta  
+  `export FRONTEND_URL=http://127.0.0.1:5173` prima di `runserver`, altrimenti il browser può bloccare le chiamate API per CORS.
+- Puoi creare un file **`frontend/.env`** con `VITE_BACKEND_URL=http://localhost:3001` per non dover esportare la variabile ogni volta (Vite legge i file `.env` all’avvio).
