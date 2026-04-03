@@ -1,0 +1,28 @@
+{
+  "id": "template-checklist-prova",
+  "name": "Template checklist di prova",
+  "description": "Template demo per checklist tecniche con selezioni guidate.",
+  "tag": "Demo",
+  "app_key": "demo-checklist",
+  "manifest_version": "2",
+  "compile_contract": {
+    "input": "schema",
+    "output_filename": "main.pdf"
+  },
+  "parameters_file": "parameters.json",
+  "capabilities": {
+    "auth_required": true
+  },
+  "form_schema": {
+    "title": "Parametri checklist",
+    "fields": [
+      { "key": "titoloChecklist", "label": "Titolo checklist", "type": "text", "required": true, "default": "Checklist sopralluogo impianto", "group": "Generale" },
+      { "key": "tecnico", "label": "Tecnico", "type": "text", "required": true, "default": "Paolo Bianchi", "group": "Generale" },
+      { "key": "sito", "label": "Sito", "type": "text", "required": true, "default": "Condominio Verde, Milano", "group": "Generale" },
+      { "key": "dataSopralluogo", "label": "Data sopralluogo", "type": "date", "required": true, "default": "__TODAY__", "group": "Generale" },
+      { "key": "statoAlimentazione", "label": "Stato alimentazione", "type": "select", "required": true, "default": "Attiva", "options": ["Attiva", "Disattiva", "Parziale"], "group": "Esito" },
+      { "key": "esito", "label": "Esito", "type": "select", "required": true, "default": "Conforme", "options": ["Conforme", "Da verificare", "Non conforme"], "group": "Esito" },
+      { "key": "note", "label": "Note", "type": "textarea", "required": true, "default": "Nessuna anomalia rilevata.", "group": "Esito" }
+    ]
+  }
+}

@@ -2,7 +2,7 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 
 type ProtectedRouteProps = {
-  children: JSX.Element;
+  children: React.ReactElement;
 };
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {

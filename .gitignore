@@ -18,3 +18,4 @@ npm-debug.log*
 # Env
 .env
 .env.local
+env/.env.development

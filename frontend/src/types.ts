@@ -1,41 +1,69 @@
-export type Revisione = {
-  numRevisione: string
-  data: string
-  descrizioneRevisione: string
-}
-
-export type RelazioneTecnicaParams = {
-  nomeCommittente: string
-  cognomeCommittente: string
-  indirizzoCommittente: string
-  codiceProgetto: string
-  dataGenerazioneDocumento: string
-  tipoDiCavo: string
-  luogoInstallazione: 'box condominiale' | 'parcheggio condominiale' | 'posto auto condominiale'
-  descrizioneProgetto: string
-  alimentazioneSgancio: string
-  tensioneAlimentazione: '230' | '400'
-  potenzaWallbox: string
-  temperaturaAmbiente: string
-  temperaturaTerreno: string
-  revisioni: Revisione[]
-}
-
 export type CompileState =
   | { status: 'idle' }
   | { status: 'loading' }
   | { status: 'success'; pdfUrl: string }
   | { status: 'error'; message: string }
 
-export type TemplateId =
-  | 'relazione-tecnico-specialistica-domestico-tt-cpi'
-  | 'template-di-prova'
+export type TemplateFieldType =
+  | 'text'
+  | 'textarea'
+  | 'date'
+  | 'select'
+  | 'number'
+  | 'boolean'
+  | 'checkboxes'
+  | 'array'
 
-export type TemplateDefinition = {
-  id: TemplateId
+export type TextareaPreset = {
+  label: string
+  text: string
+}
+
+export type TemplateScalarField = {
+  key: string
+  label: string
+  type: Exclude<TemplateFieldType, 'array'>
+  required?: boolean
+  default?: string | number | boolean | string[]
+  options?: string[]
+  /** Solo per type textarea: testi pronti (es. da copiare o inserire nel campo). */
+  presets?: TextareaPreset[]
+  group?: string
+}
+
+export type TemplateArrayField = {
+  key: string
+  label: string
+  type: 'array'
+  required?: boolean
+  default?: Array<Record<string, string | number | boolean>>
+  group?: string
+  item?: {
+    fields?: TemplateScalarField[]
+  }
+}
+
+export type TemplateField = TemplateScalarField | TemplateArrayField
+
+export type TemplateFormSchema = {
+  title?: string
+  fields?: TemplateField[]
+}
+
+export type TemplateDefinitionBase = {
+  id: string
   name: string
   description: string
   tag: string
-  projectPath: string
 }
 
+export type TemplateDefinition = {
+  app_key?: string
+  manifest_version?: string
+  compile_contract?: {
+    input?: string
+    output_filename?: string
+  }
+  capabilities?: Record<string, unknown>
+  form_schema?: TemplateFormSchema
+} & TemplateDefinitionBase

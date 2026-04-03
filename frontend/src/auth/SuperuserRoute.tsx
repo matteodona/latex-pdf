@@ -2,7 +2,7 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 
 type SuperuserRouteProps = {
-  children: JSX.Element;
+  children: React.ReactElement;
 };
 
 export function SuperuserRoute({ children }: SuperuserRouteProps) {

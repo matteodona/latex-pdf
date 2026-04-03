@@ -1,0 +1,26 @@
+{
+  "id": "template-lettera-prova",
+  "name": "Template lettera di prova",
+  "description": "Template dimostrativo per lettere con parametri semplici.",
+  "tag": "Demo",
+  "app_key": "demo-lettere",
+  "manifest_version": "2",
+  "compile_contract": {
+    "input": "schema",
+    "output_filename": "main.pdf"
+  },
+  "parameters_file": "parameters.json",
+  "capabilities": {
+    "auth_required": true
+  },
+  "form_schema": {
+    "title": "Parametri lettera",
+    "fields": [
+      { "key": "luogoData", "label": "Luogo e data", "type": "text", "required": true, "default": "Milano, 01/04/2026", "group": "Intestazione" },
+      { "key": "oggetto", "label": "Oggetto", "type": "text", "required": true, "default": "Comunicazione tecnica", "group": "Intestazione" },
+      { "key": "destinatario", "label": "Destinatario", "type": "text", "required": true, "default": "Spett.le Cliente", "group": "Contenuto" },
+      { "key": "corpo", "label": "Corpo lettera", "type": "textarea", "required": true, "default": "Con la presente si comunica che l'intervento e stato pianificato.", "group": "Contenuto" },
+      { "key": "firma", "label": "Firma", "type": "text", "required": true, "default": "Ing. Mario Rossi", "group": "Chiusura" }
+    ]
+  }
+}
