@@ -1,6 +1,5 @@
-FROM node:20-bookworm
+FROM python:3.12-bookworm
 
-# Installa LaTeX (semplificato, ma pesante)
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
       texlive-latex-base \
@@ -11,19 +10,15 @@ RUN apt-get update && \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    DJANGO_SETTINGS_MODULE=config.settings.base
 
-COPY package*.json ./
-RUN npm install --only=production
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-# La cartella data/ verrà montata come volume
-VOLUME ["/app/data"]
+EXPOSE 8000
 
-ENV NODE_ENV=production
-ENV PORT=3001
-
-EXPOSE 3001
-
-CMD ["npm", "start"]
-
+CMD ["sh", "-c", "python manage.py migrate --noinput && python manage.py collectstatic --noinput && exec gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 2"]
