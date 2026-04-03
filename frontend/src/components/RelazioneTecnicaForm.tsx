@@ -73,7 +73,7 @@ export function RelazioneTecnicaForm({
               onChange={(event) =>
                 onChange('codiceProgetto', event.target.value)
               }
-              required
+              placeholder="Lasciare vuoto per codice automatico (8 caratteri)"
             />
           </label>
           <label className="field">

@@ -61,6 +61,62 @@ function defaultRelazioneParams(options?: {
   }
 }
 
+const CODICE_PROGETTO_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+
+/** Codice alfanumerico di 8 caratteri se l’utente non indica un codice progetto. */
+function codiceProgettoPerCompilazione(codiceUtente: string): string {
+  if (codiceUtente.trim() !== '') {
+    return codiceUtente.trim()
+  }
+  const bytes = new Uint8Array(8)
+  crypto.getRandomValues(bytes)
+  let out = ''
+  for (let i = 0; i < 8; i++) {
+    out += CODICE_PROGETTO_ALPHABET[bytes[i]! % CODICE_PROGETTO_ALPHABET.length]
+  }
+  return out
+}
+
+/** Data documento per il piè di pagina: dd-mm-yyyy (input form tipicamente yyyy-mm-dd). */
+function dataDocumentoFooter(isoOrPlain: string): string {
+  const s = isoOrPlain.trim()
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s)
+  if (m) {
+    return `${m[3]}-${m[2]}-${m[1]}`
+  }
+  return s
+}
+
+function timestampDaDataRevisione(data: string): number {
+  const s = data.trim()
+  if (!s) {
+    return Number.NEGATIVE_INFINITY
+  }
+  const iso = /^(\d{4})-(\d{2})-(\d{2})$/.test(s) ? `${s}T12:00:00` : s
+  const t = Date.parse(iso)
+  return Number.isNaN(t) ? Number.NEGATIVE_INFINITY : t
+}
+
+/** Numero revisione con data più recente (come in tabella revisioni). */
+function ultimaRevisionePerData(
+  rows: { numRevisione: string; data: string }[],
+): string {
+  if (rows.length === 0) {
+    return '0'
+  }
+  let best = rows[0]!
+  let bestT = timestampDaDataRevisione(best.data)
+  for (let i = 1; i < rows.length; i++) {
+    const row = rows[i]!
+    const t = timestampDaDataRevisione(row.data)
+    if (t >= bestT) {
+      bestT = t
+      best = row
+    }
+  }
+  return String(best.numRevisione ?? '0')
+}
+
 async function compileRelazioneTecnica(
   params: RelazioneTecnicaParams,
   authHeader: string | null,
@@ -98,8 +154,11 @@ async function compileRelazioneTecnica(
           tabellaRevisioni,
         },
         footer: {
-          codiceProgetto: params.codiceProgetto,
-          dataGenerazioneDocumento: params.dataGenerazioneDocumento,
+          codiceProgetto: codiceProgettoPerCompilazione(params.codiceProgetto),
+          dataGenerazioneDocumento: dataDocumentoFooter(
+            params.dataGenerazioneDocumento,
+          ),
+          ultimaRevisione: ultimaRevisionePerData(tabellaRevisioni),
         },
         chapters: {
           '03-criteri': {
