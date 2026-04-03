@@ -1,24 +1,21 @@
-import { FormEvent, useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import type { FormEvent } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 
 export function LoginPage() {
   const { state, login } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
-
-  const from =
-    (location.state as { from?: string } | null)?.from ?? '/relazione-tecnico-specialistica-domestico-tt-cpi';
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
     setError(null);
     try {
       await login({ username, password });
-      navigate(from, { replace: true });
+      navigate('/', { replace: true });
     } catch (err) {
       if (err instanceof Error) {
         setError(err.message);

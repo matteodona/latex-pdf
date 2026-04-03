@@ -1,4 +1,10 @@
-# Node
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+
+# Node (legacy)
 node_modules/
 
 # OS

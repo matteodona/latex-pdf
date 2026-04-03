@@ -1,0 +1,392 @@
+{
+  "id": "relazione-tecnico-specialistica-domestico-tt-cpi",
+  "name": "Relazione tecnico specialistica DOMESTICO TT CPI",
+  "description": "Genera una relazione tecnica completa a partire da pochi parametri essenziali.",
+  "tag": "Impianti elettrici",
+  "documentVersion": "1.0.0",
+  "latex": {
+    "entrypoint": "main.tex",
+    "description": "Struttura LaTeX del progetto: ogni template futuro avrà qui le proprie parti, indipendenti dagli altri.",
+    "parts": [
+      {
+        "id": "main",
+        "path": "main.tex",
+        "includedFrom": null,
+        "placeholders": [],
+        "notes": [
+          "Contiene \\label{LastPage} prima di \\end{document} per \\pageref{LastPage} nel footer (non è un placeholder API)."
+        ]
+      },
+      {
+        "id": "header",
+        "path": "sections/header.tex",
+        "includedFrom": "main.tex",
+        "placeholders": []
+      },
+      {
+        "id": "footer",
+        "path": "sections/footer.tex",
+        "includedFrom": "main.tex",
+        "placeholders": [
+          {
+            "key": "codiceProgetto",
+            "note": "Se vuoto nel form, il client genera un codice alfanumerico di 8 caratteri prima dell'invio."
+          },
+          {
+            "key": "dataGenerazioneDocumento",
+            "note": "Nel PDF footer in formato dd-mm-yyyy (normalizzato dal client)."
+          },
+          {
+            "key": "ultimaRevisione",
+            "note": "Numero revisione con data più recente nella tabella revisioni (calcolato dal client)."
+          }
+        ]
+      },
+      {
+        "id": "fontespizio",
+        "path": "sections/fontespizio.tex",
+        "includedFrom": "main.tex",
+        "placeholders": [
+          { "key": "nomeCommittente" },
+          { "key": "cognomeCommittente" },
+          { "key": "indirizzoCommittente" },
+          {
+            "key": "tabellaRevisioni",
+            "note": "Righe LaTeX tabella: lista di oggetti { numRevisione, data, descrizioneRevisione }; formattazione in compile_latex._format_tabella_revisioni."
+          }
+        ]
+      },
+      {
+        "id": "chapter-01-premessa",
+        "path": "sections/chapters/01-premessa.tex",
+        "includedFrom": "main.tex",
+        "placeholders": [
+          { "key": "nomeCommittente" },
+          { "key": "cognomeCommittente" },
+          { "key": "indirizzoCommittente" }
+        ]
+      },
+      {
+        "id": "chapter-02-riferimenti",
+        "path": "sections/chapters/02-riferimenti.tex",
+        "includedFrom": "main.tex",
+        "placeholders": []
+      },
+      {
+        "id": "chapter-03-criteri",
+        "path": "sections/chapters/03-criteri.tex",
+        "includedFrom": "main.tex",
+        "placeholders": [
+          {
+            "key": "tipiDiCavoBlocco",
+            "note": "Frammento itemize o testo se nessun tipo selezionato; prodotto dal client da tipiDiCavo (vedi userParameters)."
+          }
+        ]
+      },
+      {
+        "id": "chapter-04-soluzione",
+        "path": "sections/chapters/04-soluzione.tex",
+        "includedFrom": "main.tex",
+        "placeholders": [
+          { "key": "luogoInstallazione" },
+          { "key": "nomeCommittente" },
+          { "key": "cognomeCommittente" },
+          { "key": "indirizzoCommittente" },
+          { "key": "descrizioneProgetto" },
+          { "key": "alimentazioneSgancio" },
+          { "key": "tensioneAlimentazione", "note": "Valore con unità LaTeX es. 230\\,V" },
+          { "key": "potenzaWallbox" },
+          { "key": "temperaturaAmbiente" },
+          { "key": "temperaturaTerreno" },
+          { "key": "correnteCortoCircuito", "note": "Derivata da tensioneAlimentazione utente (230→6, 400→10)." },
+          { "key": "tensioneWallbox", "note": "Derivata da tensioneAlimentazione utente (230→F, 400→3F)." }
+        ]
+      },
+      {
+        "id": "chapter-05-ulteriori",
+        "path": "sections/chapters/05-ulteriori.tex",
+        "includedFrom": "main.tex",
+        "placeholders": []
+      },
+      {
+        "id": "chapter-06-allegati",
+        "path": "sections/chapters/06-allegati.tex",
+        "includedFrom": "main.tex",
+        "placeholders": []
+      }
+    ]
+  },
+  "compileRequest": {
+    "description": "Struttura params inviata a POST /api/templates/{slug}/compile (params.sections.*). Ogni altro progetto avrà un albero proprio.",
+    "sections": {
+      "fontespizio": {
+        "texFile": "sections/fontespizio.tex",
+        "keys": [
+          "nomeCommittente",
+          "cognomeCommittente",
+          "indirizzoCommittente",
+          "tabellaRevisioni"
+        ]
+      },
+      "footer": {
+        "texFile": "sections/footer.tex",
+        "keys": [
+          "codiceProgetto",
+          "dataGenerazioneDocumento",
+          "ultimaRevisione"
+        ]
+      },
+      "chapters": {
+        "01-premessa": {
+          "texFile": "sections/chapters/01-premessa.tex",
+          "keys": [
+            "nomeCommittente",
+            "cognomeCommittente",
+            "indirizzoCommittente"
+          ]
+        },
+        "03-criteri": {
+          "texFile": "sections/chapters/03-criteri.tex",
+          "keys": ["tipiDiCavoBlocco"]
+        },
+        "04-soluzione": {
+          "texFile": "sections/chapters/04-soluzione.tex",
+          "keys": [
+            "luogoInstallazione",
+            "nomeCommittente",
+            "cognomeCommittente",
+            "indirizzoCommittente",
+            "descrizioneProgetto",
+            "alimentazioneSgancio",
+            "tensioneAlimentazione",
+            "potenzaWallbox",
+            "temperaturaAmbiente",
+            "temperaturaTerreno",
+            "correnteCortoCircuito",
+            "tensioneWallbox"
+          ]
+        }
+      }
+    }
+  },
+  "userParameters": {
+    "description": "Parametri raccolti dal form (contratto indipendente per questo progetto). Implementazione attuale: frontend TypeScript.",
+    "groups": [
+      {
+        "id": "committente",
+        "label": "Dati committente",
+        "fields": [
+          {
+            "key": "nomeCommittente",
+            "label": "Nome",
+            "valueType": "string",
+            "required": true
+          },
+          {
+            "key": "cognomeCommittente",
+            "label": "Cognome",
+            "valueType": "string",
+            "required": true
+          },
+          {
+            "key": "indirizzoCommittente",
+            "label": "Indirizzo",
+            "valueType": "string",
+            "required": true
+          }
+        ]
+      },
+      {
+        "id": "documento",
+        "label": "Dati documento",
+        "fields": [
+          {
+            "key": "codiceProgetto",
+            "label": "Codice progetto",
+            "valueType": "string",
+            "required": false,
+            "note": "Vuoto: codice alfanumerico 8 caratteri generato in compilazione."
+          },
+          {
+            "key": "dataGenerazioneDocumento",
+            "label": "Data generazione",
+            "valueType": "date",
+            "required": true,
+            "note": "Input ISO yyyy-mm-dd; revisione 0 e footer usano anche formato derivato."
+          }
+        ]
+      },
+      {
+        "id": "revisioni",
+        "label": "Elenco revisioni",
+        "valueType": "array",
+        "itemShape": {
+          "numRevisione": "string",
+          "data": "date",
+          "descrizioneRevisione": "string"
+        },
+        "note": "Indice 0 forza numRevisione '0' e allinea la data alla data generazione documento nel payload tabellaRevisioni."
+      },
+      {
+        "id": "tecnici",
+        "label": "Dettagli tecnici",
+        "fields": [
+          {
+            "key": "tipiDiCavo",
+            "label": "Tipi di cavo",
+            "valueType": "multiCheckbox",
+            "required": false,
+            "options": [
+              {
+                "id": "fg16om16",
+                "label": "FG 16 (O) M 16",
+                "documentText": "FG 16 (O) M 16"
+              },
+              {
+                "id": "fg16or16",
+                "label": "FG 16 (O) R 16",
+                "documentText": "G 16 (O) R 16"
+              },
+              {
+                "id": "fs17",
+                "label": "FS 17",
+                "documentText": "S 17"
+              },
+              {
+                "id": "lan",
+                "label": "LAN",
+                "documentText": "LAN"
+              }
+            ],
+            "compileTo": {
+              "placeholder": "tipiDiCavoBlocco",
+              "transform": "tipiDiCavoBloccoLatex",
+              "order": ["fg16om16", "fg16or16", "fs17", "lan"]
+            }
+          },
+          {
+            "key": "luogoInstallazione",
+            "label": "Luogo installazione",
+            "valueType": "enum",
+            "required": true,
+            "allowedValues": [
+              "box condominiale",
+              "parcheggio condominiale",
+              "posto auto condominiale"
+            ]
+          },
+          {
+            "key": "descrizioneProgetto",
+            "label": "Descrizione progetto",
+            "valueType": "string",
+            "multiline": true,
+            "required": true,
+            "presetsManifestKey": "descrizioneProgettoPresets",
+            "note": "Testi pronti in descrizioneProgettoPresets.items (label + text); il frontend mostra pulsanti che impostano il textarea."
+          },
+          {
+            "key": "alimentazioneSgancio",
+            "label": "Alimentazione sgancio",
+            "valueType": "string",
+            "required": true
+          },
+          {
+            "key": "tensioneAlimentazione",
+            "label": "Tensione alimentazione",
+            "valueType": "enum",
+            "required": true,
+            "allowedValues": ["230", "400"]
+          },
+          {
+            "key": "potenzaWallbox",
+            "label": "Potenza wallbox",
+            "valueType": "string",
+            "required": true
+          },
+          {
+            "key": "temperaturaAmbiente",
+            "label": "Temperatura ambiente",
+            "valueType": "string",
+            "required": true
+          },
+          {
+            "key": "temperaturaTerreno",
+            "label": "Temperatura terreno",
+            "valueType": "string",
+            "required": true
+          }
+        ]
+      }
+    ]
+  },
+  "descrizioneProgettoPresets": {
+    "description": "Testi pronti per il campo «Descrizione progetto»: modificabili qui; il frontend mostra pulsanti che inseriscono il testo nel textarea (sostituiscono il contenuto).",
+    "items": [
+      {
+        "id": "wallbox-box",
+        "label": "Wallbox in box",
+        "text": "Installazione di una stazione di ricarica per veicoli elettrici in box condominiale di proprietà del committente, alimentata in bassa tensione e coordinata con l’impianto elettrico esistente del condominio. L’intervento prevede adeguamento delle linee e delle protezioni a monte, posa del cavo di alimentazione fino al punto di utilizzo, installazione della wallbox con relativa messa a terra e collegamento al sistema di sgancio richiesto dalla normativa antincendio, ove applicabile. Il sistema è dimensionato per la potenza nominale indicata in relazione e per un utilizzo in modalità di ricarica controllata in ambiente chiuso."
+      },
+      {
+        "id": "parcheggio-coperto",
+        "label": "Parcheggio condominiale",
+        "text": "Realizzazione di un punto di ricarica per veicolo elettrico in area di parcheggio condominiale coperta, con percorsi cavi in tubazione protetta fino alla colonnina o alla wallbox. La soluzione è integrata con la distribuzione esistente, con verifica di portata dei conduttori e di coordinamento delle protezioni contro sovraccarico e cortocircuito. È prevista la conformità ai requisiti di coesistenza e posa dei cavi previsti dalle norme di riferimento per impianti in spazi comuni e, ove richiesto, il collegamento a dispositivi di sgancio o segnalazioni per la sicurezza degli utenti."
+      },
+      {
+        "id": "posto-auto",
+        "label": "Posto auto assegnato",
+        "text": "Intervento di predisposizione e installazione di infrastruttura di ricarica in posto auto condominiale assegnato in uso esclusivo, con derivazione dalla quadro o linea idonea dell’edificio. Il progetto definisce tracciato, tipo di posa, sezione dei conduttori e dispositivi di protezione, garantendo compatibilità con la potenza contrattuale e con le prescrizioni del regolamento condominiale e della normativa tecnica vigente. La wallbox sarà installata in posizione accessibile, con sistema di alimentazione che consente l’arresto sicuro dell’utenza in caso di emergenza o comando da impianto condominiale."
+      },
+      {
+        "id": "sintesi-tecnica",
+        "label": "Sintesi tecnica",
+        "text": "Fornitura e installazione di wallbox per ricarica veicolo elettrico nel luogo di installazione indicato, con allacciamento all’impianto di distribuzione esistente, protezioni magnetotermiche e differenziali coordinati, conduttori dimensionati per portata e caduta di tensione, messa a terra e protezioni equipotenziali. L’impianto è progettato in conformità alle norme CEI di riferimento per impianti BT e alle prescrizioni per la prevenzione incendi ove il locale è soggetto a controllo dei VV.F."
+      }
+    ]
+  },
+  "derivedAtCompile": {
+    "description": "Valori non immessi direttamente dall'utente ma inviati nel body di compilazione (logica attuale nel client).",
+    "items": [
+      {
+        "key": "tabellaRevisioni",
+        "from": "revisioni + dataGenerazioneDocumento",
+        "where": "sections.fontespizio"
+      },
+      {
+        "key": "codiceProgetto",
+        "from": "codiceProgetto utente o generazione 8 caratteri",
+        "where": "sections.footer"
+      },
+      {
+        "key": "dataGenerazioneDocumento",
+        "from": "conversione dd-mm-yyyy per il footer",
+        "where": "sections.footer"
+      },
+      {
+        "key": "ultimaRevisione",
+        "from": "max(data) su tabellaRevisioni",
+        "where": "sections.footer"
+      },
+      {
+        "key": "tensioneAlimentazione",
+        "from": "suffisso \\,V in LaTeX",
+        "where": "chapters.04-soluzione"
+      },
+      {
+        "key": "correnteCortoCircuito",
+        "from": "230 → 6, 400 → 10",
+        "where": "chapters.04-soluzione"
+      },
+      {
+        "key": "tensioneWallbox",
+        "from": "230 → F, 400 → 3F",
+        "where": "chapters.04-soluzione"
+      },
+      {
+        "key": "tipiDiCavoBlocco",
+        "from": "tipiDiCavo + mappa documentText",
+        "where": "chapters.03-criteri"
+      }
+    ]
+  }
+}

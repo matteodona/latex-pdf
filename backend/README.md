@@ -1,109 +1,36 @@
-# latex-pdf-backend
+# Backend (sviluppo locale)
 
-Tutto il progetto è in questa cartella: compilazione LaTeX, parametri per file, server API per il frontend.
-
-## Requisiti
-
-- Node.js ≥ 16
-- TeX Live (o MacTeX) con `pdflatex` nel PATH
-
-## Installazione e avvio
+## Avvio rapido
 
 ```bash
 cd backend
-npm install
-npm start
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+python manage.py migrate
+export FRONTEND_URL=http://localhost:5173
+python manage.py create_superuser <username> <password>
+python manage.py runserver 0.0.0.0:3001
 ```
 
-Server in ascolto su http://localhost:3001 (o `PORT` se impostata).
+## Verifica
 
-## Struttura
-
-```
-backend/
-├── projects/                    # Un progetto per sottocartella
-│   └── relazione-tecnico-specialistica-domestico-tt-cpi/  # Progetto LaTeX
-├── src/                         # Modulo compilazione
-│   ├── compileLatex.js
-│   └── index.js
-├── examples/
-│   └── compile.js
-├── index.js                     # Server Express (API)
-├── package.json
-└── README.md
+```bash
+python manage.py check
 ```
 
-Per aggiungere un nuovo tipo di documento: crea una sottocartella in `projects/` (es. `projects/preventivo/`) con il suo albero LaTeX e usa `projectPath: "preventivo"` nell’API.
+## Admin Django (pannello nativo)
 
-## Script
+- URL: `http://localhost:3001/admin`
+- Accesso:
+  1. Avvia il backend (`python manage.py runserver 0.0.0.0:3001`).
+  2. Crea un superuser (`python manage.py create_superuser ...`) se non esiste.
+  3. Login su `http://localhost:3001/admin`.
 
-| Comando | Descrizione |
-|--------|-------------|
-| `npm start` | Avvia il server API (porta 3001) |
-| `npm run compile` | Compila il progetto Relazione tecnico specialistica DOMESTICO TT CPI con l’esempio |
+## Admin frontend (app React)
 
-## API
-
-### GET /api/health
-
-Health check. Risposta: `{ "status": "ok", "timestamp": "..." }`.
-
-### POST /api/compile
-
-Compila e restituisce il PDF.
-
-**Body (JSON):**
-```json
-{
-  "projectPath": "relazione-tecnico-specialistica-domestico-tt-cpi",
-  "params": {
-    "sections": {
-      "fontespizio": { "nomeCommittente": "...", "cognomeCommittente": "...", "indirizzoCommittente": "...", "tabellaRevisioni": [...] },
-      "footer": { "codiceProgetto": "...", "dataGenerazioneDocumento": "..." },
-      "chapters": {
-        "03-criteri": { "tipoDiCavo": "..." },
-        "04-soluzione": { "luogoInstallazione": "...", ... }
-      }
-    }
-  }
-}
-```
-
-- **projectPath** (obbligatorio): nome della sottocartella in `projects/`
-  (es. `"relazione-tecnico-specialistica-domestico-tt-cpi"`).
-- **params** (opzionale): struttura che ricalca cartelle/file del progetto scelto.
-
-**Successo 200:** corpo = PDF (attachment). **Errore 400/500:** `{ "error": "messaggio" }`.
-
-**Esempio dal frontend:**
-```js
-const res = await fetch('http://localhost:3001/api/compile', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    projectPath: 'relazione-tecnico-specialistica-domestico-tt-cpi',
-    params: { ... },
-  }),
-});
-const blob = await res.blob();
-// es. URL.createObjectURL(blob) per anteprima o download
-```
-
-## Uso modulo (da script)
-
-```js
-const path = require('path');
-const { compileToPdf } = require('./src');
-const pdfPath = compileToPdf(
-  path.join(__dirname, 'projects', 'relazione-tecnico-specialistica-domestico-tt-cpi'),
-  paramsStructure,
-);
-```
-
-## Placeholder nei .tex
-
-Nei file `.tex` usa `\{nomeParametro\}` (es. `\{nomeCommittente\}`, `\{codiceProgetto\}`). Per la tabella revisioni: parametro `tabellaRevisioni` (array di `{ numRevisione, data, descrizioneRevisione }`).
-
-## Licenza
-
-MIT
+- URL: `http://localhost:5173/admin`
+- Accesso:
+  1. Avvia anche il frontend (`npm run dev` in `frontend/`).
+  2. Fai login da `http://localhost:5173/login` con utente `superuser`.
+  3. Apri `http://localhost:5173/admin` o clicca **Admin** dalla home.
