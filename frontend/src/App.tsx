@@ -12,7 +12,13 @@ import type {
 import { TemplateList } from './components/TemplateList'
 import { RelazioneTecnicaForm } from './components/RelazioneTecnicaForm'
 import { PdfPreview } from './components/PdfPreview'
+import type { IdTipoCavo } from './tipiCavoConfig'
+import {
+  defaultTipiCavoSelezionati,
+  tipiDiCavoBloccoLatex,
+} from './tipiCavoConfig'
 import { useAuth } from './auth/AuthContext'
+import { parseDescrizioneProgettoPresets } from './templateManifest'
 
 const API_BASE_URL =
   import.meta.env.VITE_BACKEND_URL ?? 'http://localhost:3001'
@@ -29,33 +35,28 @@ async function fetchTemplates(): Promise<TemplateDefinition[]> {
 }
 
 /** Valori iniziali del form (data revisione 0 allineata alla data documento). */
-function defaultRelazioneParams(options?: {
-  revisionDescription?: string
-  codiceProgetto?: string
-  temperaturaAmbiente?: string
-}): RelazioneTecnicaParams {
+function defaultRelazioneParams(): RelazioneTecnicaParams {
   const today = new Date().toISOString().slice(0, 10)
   return {
     nomeCommittente: 'Mario',
     cognomeCommittente: 'Rossi',
     indirizzoCommittente: 'Via Roma 1, 20100 Milano',
-    codiceProgetto: options?.codiceProgetto ?? 'PROG-2026-001',
+    codiceProgetto: 'PROG-2026-001',
     dataGenerazioneDocumento: today,
-    tipoDiCavo: 'FG16OR16 3G6 mm²',
+    tipiDiCavo: defaultTipiCavoSelezionati(),
     luogoInstallazione: 'box condominiale',
     descrizioneProgetto:
       'Installazione di wallbox per ricarica veicolo elettrico in box condominiale.',
     alimentazioneSgancio: '230 V AC',
     tensioneAlimentazione: '230',
     potenzaWallbox: '7,4',
-    temperaturaAmbiente: options?.temperaturaAmbiente ?? '30',
+    temperaturaAmbiente: '30',
     temperaturaTerreno: '20',
     revisioni: [
       {
         numRevisione: '0',
         data: today,
-        descrizioneRevisione:
-          options?.revisionDescription ?? 'Emissione documento',
+        descrizioneRevisione: 'Emissione documento',
       },
     ],
   }
@@ -117,6 +118,43 @@ function ultimaRevisionePerData(
   return String(best.numRevisione ?? '0')
 }
 
+async function postTemplateCompile(
+  templateSlug: string,
+  body: unknown,
+  authHeader: string | null,
+): Promise<Blob> {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  }
+  if (authHeader) {
+    headers.Authorization = authHeader
+  }
+
+  const response = await fetch(
+    `${API_BASE_URL}/api/templates/${encodeURIComponent(templateSlug)}/compile`,
+    {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(body),
+    },
+  )
+
+  if (!response.ok) {
+    let message = 'Errore durante la compilazione del PDF.'
+    try {
+      const data = (await response.json()) as { error?: string }
+      if (data?.error) {
+        message = data.error
+      }
+    } catch {
+      // se non è JSON, manteniamo il messaggio generico
+    }
+    throw new Error(message)
+  }
+
+  return response.blob()
+}
+
 async function compileRelazioneTecnica(
   params: RelazioneTecnicaParams,
   authHeader: string | null,
@@ -161,8 +199,13 @@ async function compileRelazioneTecnica(
           ultimaRevisione: ultimaRevisionePerData(tabellaRevisioni),
         },
         chapters: {
+          '01-premessa': {
+            nomeCommittente: params.nomeCommittente,
+            cognomeCommittente: params.cognomeCommittente,
+            indirizzoCommittente: params.indirizzoCommittente,
+          },
           '03-criteri': {
-            tipoDiCavo: params.tipoDiCavo,
+            tipiDiCavoBlocco: tipiDiCavoBloccoLatex(params.tipiDiCavo),
           },
           '04-soluzione': {
             luogoInstallazione: params.luogoInstallazione,
@@ -183,36 +226,7 @@ async function compileRelazioneTecnica(
     },
   }
 
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-  }
-  if (authHeader) {
-    headers.Authorization = authHeader
-  }
-
-  const response = await fetch(
-    `${API_BASE_URL}/api/templates/${encodeURIComponent(templateSlug)}/compile`,
-    {
-      method: 'POST',
-      headers,
-      body: JSON.stringify(body),
-    },
-  )
-
-  if (!response.ok) {
-    let message = 'Errore durante la compilazione del PDF.'
-    try {
-      const data = (await response.json()) as { error?: string }
-      if (data?.error) {
-        message = data.error
-      }
-    } catch {
-      // se non è JSON, manteniamo il messaggio generico
-    }
-    throw new Error(message)
-  }
-
-  return response.blob()
+  return postTemplateCompile(templateSlug, body, authHeader)
 }
 
 function App() {
@@ -269,18 +283,7 @@ function App() {
 
   useEffect(() => {
     setCompileState({ status: 'idle' })
-
-    if (selectedTemplate?.id === 'template-di-prova') {
-      setParams(
-        defaultRelazioneParams({
-          revisionDescription: 'Prima emissione di prova',
-          codiceProgetto: 'TEST-001',
-          temperaturaAmbiente: '25',
-        }),
-      )
-    } else {
-      setParams(defaultRelazioneParams())
-    }
+    setParams(defaultRelazioneParams())
   }, [templateId, selectedTemplate?.id])
 
   const handleChange = (
@@ -288,6 +291,13 @@ function App() {
     value: string,
   ) => {
     setParams((prev) => ({ ...prev, [field]: value }))
+  }
+
+  const handleTipiDiCavoChange = (id: IdTipoCavo, checked: boolean) => {
+    setParams((prev) => ({
+      ...prev,
+      tipiDiCavo: { ...prev.tipiDiCavo, [id]: checked },
+    }))
   }
 
   const handleRevisionChange = (
@@ -463,7 +473,11 @@ function App() {
           <RelazioneTecnicaForm
             params={params}
             compileState={compileState}
+            descrizioneProgettoPresets={parseDescrizioneProgettoPresets(
+              selectedTemplate,
+            )}
             onChange={handleChange}
+            onTipiDiCavoChange={handleTipiDiCavoChange}
             onRevisionChange={handleRevisionChange}
             onAddRevision={handleAddRevision}
             onRemoveRevision={handleRemoveRevision}

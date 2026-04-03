@@ -239,6 +239,47 @@ a.link-button:hover {
   resize: vertical;
 }
 
+.description-presets {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 0.35rem;
+}
+
+.description-presets-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.field-help {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #94a3b8;
+  line-height: 1.45;
+}
+
+.checkbox-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-top: 0.35rem;
+}
+
+.checkbox-field {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.55rem;
+  margin-bottom: 0.15rem;
+}
+
+.checkbox-field input[type='checkbox'] {
+  width: 1.1rem;
+  height: 1.1rem;
+  padding: 0;
+  flex-shrink: 0;
+}
+
 .field input:focus,
 .field select:focus,
 .field textarea:focus {
@@ -308,7 +349,8 @@ button.secondary:hover {
   align-items: center;
   justify-content: center;
   padding: 1rem;
-  min-height: 580px;
+  /* Altezza ampia per leggere il PDF senza zoom eccessivo (viewport + tetto su monitor grandi). */
+  min-height: min(88vh, 1200px);
 }
 
 .preview-placeholder {
@@ -320,8 +362,9 @@ button.secondary:hover {
 
 .preview-frame {
   width: 100%;
-  height: 100%;
-  min-height: 480px;
+  align-self: stretch;
+  height: min(85vh, 1150px);
+  min-height: min(85vh, 1150px);
   border: none;
   border-radius: 0.35rem;
   background-color: #020617;

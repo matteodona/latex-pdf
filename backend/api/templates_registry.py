@@ -52,14 +52,8 @@ def list_templates(projects_base: Path) -> list[dict]:
         manifest = _load_manifest(project_dir, slug)
         if manifest is None:
             continue
-        out.append(
-            {
-                'id': manifest['id'],
-                'name': manifest['name'],
-                'description': manifest['description'],
-                'tag': manifest['tag'],
-            },
-        )
+        # Restituisce l'intero template.json così ogni progetto espone parametri e layout LaTeX in modo indipendente.
+        out.append(dict(manifest))
     return out
 
 

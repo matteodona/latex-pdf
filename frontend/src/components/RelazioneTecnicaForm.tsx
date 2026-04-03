@@ -1,10 +1,18 @@
 import type { FormEvent } from 'react'
-import type { CompileState, RelazioneTecnicaParams } from '../types'
+import type {
+  CompileState,
+  DescrizioneProgettoPreset,
+  RelazioneTecnicaParams,
+} from '../types'
+import type { IdTipoCavo } from '../tipiCavoConfig'
+import { VOCI_TIPI_CAVO } from '../tipiCavoConfig'
 
 type RelazioneTecnicaFormProps = {
   params: RelazioneTecnicaParams
   compileState: CompileState
+  descrizioneProgettoPresets: DescrizioneProgettoPreset[]
   onChange: (field: keyof RelazioneTecnicaParams, value: string) => void
+  onTipiDiCavoChange: (id: IdTipoCavo, checked: boolean) => void
   onRevisionChange: (
     index: number,
     field: 'numRevisione' | 'data' | 'descrizioneRevisione',
@@ -19,7 +27,9 @@ type RelazioneTecnicaFormProps = {
 export function RelazioneTecnicaForm({
   params,
   compileState,
+  descrizioneProgettoPresets,
   onChange,
+  onTipiDiCavoChange,
   onRevisionChange,
   onAddRevision,
   onRemoveRevision,
@@ -157,15 +167,28 @@ export function RelazioneTecnicaForm({
 
         <fieldset className="field-group">
           <legend>Dettagli tecnici</legend>
-          <label className="field">
-            <span>Tipo di cavo</span>
-            <input
-              type="text"
-              value={params.tipoDiCavo}
-              onChange={(event) => onChange('tipoDiCavo', event.target.value)}
-              required
-            />
-          </label>
+          <div className="field">
+            <span>Tipi di cavo</span>
+            <p className="field-help">
+              Opzionale: seleziona uno o più tipi. Nel PDF compariranno come elenco
+              puntato, nell’ordine indicato sotto. Se non selezioni nulla, nel documento
+              comparirà una nota esplicita.
+            </p>
+            <div className="checkbox-stack" role="group" aria-label="Tipi di cavo">
+              {VOCI_TIPI_CAVO.map((voce) => (
+                <label key={voce.id} className="field checkbox-field">
+                  <input
+                    type="checkbox"
+                    checked={params.tipiDiCavo[voce.id]}
+                    onChange={(event) =>
+                      onTipiDiCavoChange(voce.id, event.target.checked)
+                    }
+                  />
+                  <span>{voce.etichetta}</span>
+                </label>
+              ))}
+            </div>
+          </div>
           <label className="field">
             <span>Luogo installazione</span>
             <select
@@ -242,12 +265,30 @@ export function RelazioneTecnicaForm({
           <legend>Descrizione progetto</legend>
           <label className="field">
             <span>Descrizione</span>
+            {descrizioneProgettoPresets.length > 0 && (
+              <div className="description-presets">
+                <div className="description-presets-buttons">
+                  {descrizioneProgettoPresets.map((preset) => (
+                    <button
+                      key={preset.id}
+                      type="button"
+                      className="secondary small"
+                      onClick={() =>
+                        onChange('descrizioneProgetto', preset.text)
+                      }
+                    >
+                      {preset.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
             <textarea
               value={params.descrizioneProgetto}
               onChange={(event) =>
                 onChange('descrizioneProgetto', event.target.value)
               }
-              rows={4}
+              rows={6}
               required
             />
           </label>

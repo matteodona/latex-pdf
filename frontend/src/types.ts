@@ -1,3 +1,5 @@
+import type { IdTipoCavo } from './tipiCavoConfig'
+
 export type Revisione = {
   numRevisione: string
   data: string
@@ -10,7 +12,8 @@ export type RelazioneTecnicaParams = {
   indirizzoCommittente: string
   codiceProgetto: string
   dataGenerazioneDocumento: string
-  tipoDiCavo: string
+  /** Checkbox: quali tipi di cavo includere nel PDF (nessuno, uno o più). */
+  tipiDiCavo: Record<IdTipoCavo, boolean>
   luogoInstallazione: 'box condominiale' | 'parcheggio condominiale' | 'posto auto condominiale'
   descrizioneProgetto: string
   alimentazioneSgancio: string
@@ -27,10 +30,24 @@ export type CompileState =
   | { status: 'success'; pdfUrl: string }
   | { status: 'error'; message: string }
 
-/** Allineato alla risposta di GET /api/templates (manifest lato backend). */
+/** Voce modificabile in template.json → descrizioneProgettoPresets.items */
+export type DescrizioneProgettoPreset = {
+  id: string
+  label: string
+  text: string
+}
+
+/**
+ * Campi usati in UI per l’elenco template.
+ * GET /api/templates restituisce l’intero `template.json` per progetto (anche `latex`, `userParameters`, `compileRequest`, …).
+ */
 export type TemplateDefinition = {
   id: string
   name: string
   description: string
   tag: string
+  descrizioneProgettoPresets?: {
+    description?: string
+    items?: DescrizioneProgettoPreset[]
+  }
 }
