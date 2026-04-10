@@ -25,5 +25,5 @@ npm-debug.log*
 .env
 .env.local
 
-# Dati locali (es. eventuale SQLite legacy o upload temporanei)
+# Database utenti (SQLite)
 data/

@@ -25,7 +25,6 @@ services:
       db:
         condition: service_healthy
 
-  # Opzionale: SPA nginx (build separata dall'API). Porta host 8080 di default.
   frontend:
     build:
       context: ./frontend

@@ -1,41 +1,29 @@
 # =============================================================================
-# Dokploy — App 1: BACKEND (API)
-# Copia nel tab Environment dell'applicazione Docker che usa il Dockerfile in radice.
+# Dokploy — App BACKEND (API)
+# Copia nel tab Environment dell'app Docker che usa il Dockerfile in radice.
 # =============================================================================
 
 DJANGO_SETTINGS_MODULE=config.settings.production
 
-# Genera una chiave sicura (locale): python -c "import secrets; print(secrets.token_hex(32))"
-DJANGO_SECRET_KEY=<incolla-chiave-lunga>
+DJANGO_SECRET_KEY=<genera-con-python-c-import-secrets-print-secrets-token-hex-32>
 
-# Hostname con cui si raggiunge il BACKEND (senza https://). Esempio:
-DJANGO_ALLOWED_HOSTS=api.generatoredocumentazionetecnica.it
+# Includi api. e 127.0.0.1/localhost per health check Docker e Traefik
+DJANGO_ALLOWED_HOSTS=api.tuodominio.it,127.0.0.1,localhost
 
-# URL del sito React (https://) — dominio www del frontend
-FRONTEND_URL=https://www.generatoredocumentazionetecnica.it
+FRONTEND_URL=https://www.tuodominio.it
 
-# Database (Dokploy PostgreSQL o esterno)
-DATABASE_URL=<postgresql://USER:PASSWORD@HOST:5432/NOMEDB?sslmode=require>
-
-# Opzione B al posto di DATABASE_URL: POSTGRES_DB, POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_HOST, POSTGRES_PORT, POSTGRES_SSLMODE
+DATABASE_URL=postgresql://USER:PASSWORD@HOST:5432/NOMEDB?sslmode=require
 
 DJANGO_SECURE_SSL_REDIRECT=true
 DJANGO_SECURE_HSTS_SECONDS=31536000
 DJANGO_SECURE_HSTS_INCLUDE_SUBDOMAINS=true
 DJANGO_SECURE_HSTS_PRELOAD=true
 
-# Facoltativo
-# CORS_ALLOWED_ORIGINS=https://www.generatoredocumentazionetecnica.it
+# Opzionale: GUNICORN_WORKERS=2  GUNICORN_TIMEOUT=120
 
 # =============================================================================
-# Dokploy — App 2: FRONTEND (statico nginx)
-# Nessuna env runtime obbligatoria. In "Build arguments" / Docker ARG imposta:
+# Dokploy — App FRONTEND (nginx statico)
+# Build args (non env runtime obbligatorie):
+#   VITE_BACKEND_URL=https://api.tuodominio.it
+# Docker: context = frontend , Dockerfile = Dockerfile
 # =============================================================================
-#
-#   VITE_BACKEND_URL=https://api.generatoredocumentazionetecnica.it
-#
-# (stesso URL pubblico dell'API usato dal browser). Poi:
-#   Build type: Dockerfile
-#   Docker context path: frontend
-#   Docker file: Dockerfile   (file: frontend/Dockerfile rispetto al repo)
-#

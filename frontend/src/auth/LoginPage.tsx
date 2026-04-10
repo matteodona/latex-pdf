@@ -1,10 +1,6 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
-<<<<<<< HEAD
 import { Link, useNavigate } from 'react-router-dom';
-=======
-import { Link, useLocation, useNavigate } from 'react-router-dom';
->>>>>>> abbe939 (Refactor project structure to transition from Node/Express to Django for backend, implement PostgreSQL support, and enhance template management with a new API. Update README for clarity and add environment configuration examples. Introduce new frontend features for template selection and PDF generation.)
 import { useAuth } from './AuthContext';
 
 export function LoginPage() {
