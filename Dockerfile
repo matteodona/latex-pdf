@@ -24,7 +24,8 @@ WORKDIR /app/backend
 ENV PYTHONUNBUFFERED=1
 EXPOSE 8000
 
-HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
-    CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health')"
+# Host header: urllib non invia Host: api...; 127.0.0.1 deve essere in DJANGO_ALLOWED_HOSTS in produzione.
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD python -c "import urllib.request; r=urllib.request.Request('http://127.0.0.1:8000/api/health', headers={'Host':'127.0.0.1'}); urllib.request.urlopen(r, timeout=5)"
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
