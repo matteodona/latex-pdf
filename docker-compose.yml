@@ -15,8 +15,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      args:
-        VITE_BACKEND_URL: ${VITE_BACKEND_URL:-http://localhost:8000}
     ports:
       - "${HOST_PORT:-8000}:8000"
     env_file:
@@ -26,6 +24,18 @@ services:
     depends_on:
       db:
         condition: service_healthy
+
+  # Opzionale: SPA nginx (build separata dall'API). Porta host 8080 di default.
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_BACKEND_URL: ${VITE_BACKEND_URL:-http://localhost:8000}
+    ports:
+      - "${FRONTEND_HOST_PORT:-8080}:80"
+    profiles:
+      - fullstack
 
 volumes:
   postgres_data:

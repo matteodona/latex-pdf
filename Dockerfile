@@ -1,16 +1,4 @@
-# --- Frontend (Vite) ---
-FROM node:20-bookworm-slim AS frontend
-WORKDIR /src/frontend
-
-COPY frontend/package.json frontend/package-lock.json ./
-RUN npm ci
-
-COPY frontend/ ./
-ARG VITE_BACKEND_URL=http://localhost:8000
-ENV VITE_BACKEND_URL=${VITE_BACKEND_URL}
-RUN npm run build
-
-# --- Backend (Django + Gunicorn) ---
+# Solo backend API (Django + Gunicorn). Il frontend ha un Dockerfile dedicato in frontend/.
 FROM python:3.12-slim-bookworm
 
 RUN apt-get update \
@@ -25,7 +13,6 @@ RUN pip install --no-cache-dir -r /app/backend/requirements.txt
 
 COPY backend/ /app/backend/
 COPY docker/docker-entrypoint.sh /docker-entrypoint.sh
-COPY --from=frontend /src/frontend/dist /app/frontend/dist
 
 RUN chmod +x /docker-entrypoint.sh \
     && adduser --disabled-password --gecos '' appuser \
