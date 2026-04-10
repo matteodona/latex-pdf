@@ -1,6 +1,10 @@
-# Backend (sviluppo locale)
+# Backend Django
 
-## Avvio rapido
+Documentazione completa deploy e ambienti: vedi `../README.md`.
+
+## Comandi utili rapidi
+
+### Sviluppo locale (SQLite)
 
 ```bash
 cd backend
@@ -8,29 +12,20 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 python manage.py migrate
-export FRONTEND_URL=http://localhost:5173
-python manage.py create_superuser <username> <password>
 python manage.py runserver 0.0.0.0:3001
 ```
 
-## Verifica
+### Produzione (PostgreSQL)
 
 ```bash
-python manage.py check
+export DJANGO_SETTINGS_MODULE=config.settings.production
+python manage.py migrate
+gunicorn config.wsgi:application --bind 127.0.0.1:8000 --workers 3
 ```
 
-## Admin Django (pannello nativo)
+### Migrazione utenti da SQLite a PostgreSQL
 
-- URL: `http://localhost:3001/admin`
-- Accesso:
-  1. Avvia il backend (`python manage.py runserver 0.0.0.0:3001`).
-  2. Crea un superuser (`python manage.py create_superuser ...`) se non esiste.
-  3. Login su `http://localhost:3001/admin`.
-
-## Admin frontend (app React)
-
-- URL: `http://localhost:5173/admin`
-- Accesso:
-  1. Avvia anche il frontend (`npm run dev` in `frontend/`).
-  2. Fai login da `http://localhost:5173/login` con utente `superuser`.
-  3. Apri `http://localhost:5173/admin` o clicca **Admin** dalla home.
+```bash
+python manage.py migrate_sqlite_users --sqlite-path backend/data/db.sqlite3 --dry-run
+python manage.py migrate_sqlite_users --sqlite-path backend/data/db.sqlite3
+```

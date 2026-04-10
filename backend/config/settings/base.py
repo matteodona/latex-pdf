@@ -1,13 +1,19 @@
 import os
 from pathlib import Path
 
+from dotenv import load_dotenv
+
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
+load_dotenv(BASE_DIR / '.env')
+
+
+def _csv_env(name: str) -> list[str]:
+    raw = os.environ.get(name, '').strip()
+    return [part.strip() for part in raw.split(',') if part.strip()]
+
 
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', '')
-
-_raw_hosts = os.environ.get('DJANGO_ALLOWED_HOSTS', '').strip()
-ALLOWED_HOSTS = [h.strip() for h in _raw_hosts.split(',') if h.strip()]
-
+ALLOWED_HOSTS = _csv_env('DJANGO_ALLOWED_HOSTS')
 DEBUG = False
 
 INSTALLED_APPS = [
@@ -53,13 +59,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'data' / 'db.sqlite3',
-    }
-}
-
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -86,12 +85,12 @@ PASSWORD_HASHERS = [
     'django.contrib.auth.hashers.Argon2PasswordHasher',
 ]
 
-_frontend = os.environ.get('FRONTEND_URL', 'http://localhost:5173').rstrip('/')
-_cors_extra = os.environ.get('CORS_ALLOWED_ORIGINS', '').strip()
+_frontend = os.environ.get('FRONTEND_URL', '').rstrip('/')
+_cors_extra = _csv_env('CORS_ALLOWED_ORIGINS')
 if _cors_extra:
-    CORS_ALLOWED_ORIGINS = [
-        o.strip().rstrip('/') for o in _cors_extra.split(',') if o.strip()
-    ]
-else:
+    CORS_ALLOWED_ORIGINS = [o.rstrip('/') for o in _cors_extra]
+elif _frontend:
     CORS_ALLOWED_ORIGINS = [_frontend]
+else:
+    CORS_ALLOWED_ORIGINS = []
 CORS_ALLOW_CREDENTIALS = False
