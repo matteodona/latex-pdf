@@ -6,7 +6,7 @@ Questo repository e' organizzato per avere:
 - **sviluppo locale** con SQLite (`config.settings.development`)
 - **produzione** con PostgreSQL (`config.settings.production`)
 
-Il deploy consigliato e' **Docker** (`Dockerfile` + `docker-compose.yml`). In alternativa, su VPS (es. Hostinger) puoi usare backend Django con Gunicorn + nginx e frontend statico da `frontend/dist`.
+Il deploy consigliato e' **Docker** con **due immagini**: API ([`Dockerfile`](Dockerfile) in radice) e frontend statico ([`frontend/Dockerfile`](frontend/Dockerfile) con nginx). In alternativa, su VPS puoi usare Gunicorn + nginx senza container.
 
 ---
 
@@ -138,36 +138,60 @@ Pubblica `frontend/dist` su nginx (o altro static hosting).
 
 ## Deploy con Docker
 
-Monorepo: l’immagine costruisce il frontend (Node), installa il backend (Python), include TeX (`pdflatex`) e avvia Gunicorn con migrazioni automatiche all’avvio.
+Due immagini separate: **solo API** (Python + TeX + Gunicorn) e **solo frontend** (Vite build + nginx per SPA).
 
-### Build immagine
+### Build immagine API
 
 ```bash
-docker build -t cardy-app \
-  --build-arg VITE_BACKEND_URL=https://api.tuodominio.it \
-  .
+docker build -t cardy-api .
 ```
 
-`VITE_BACKEND_URL` e' l’URL pubblico dell’API visto dal browser (viene compilato nel bundle Vite).
+Contesto build: radice repo (il [`.dockerignore`](.dockerignore) esclude `frontend/` per alleggerire il contesto).
+
+### Build immagine frontend
+
+L’URL dell’API viene compilato nel bundle (`VITE_BACKEND_URL`):
+
+```bash
+docker build -t cardy-web \
+  --build-arg VITE_BACKEND_URL=https://api.tuodominio.it \
+  -f frontend/Dockerfile \
+  frontend
+```
 
 ### Compose (PostgreSQL + API)
 
 1. Copia `cp .env.docker.example .env.docker` e compila `DJANGO_SECRET_KEY`, credenziali Postgres e `DATABASE_URL` (host `db` se usi il compose incluso).
-2. Avvio:
+2. Solo API + DB:
 
 ```bash
 docker compose up --build
 ```
 
-L’API e' su `http://localhost:8000` (porta host: imposta `HOST_PORT` nel file `.env` in radice del repo — quello che Compose usa per l’interpolazione — oppure `HOST_PORT=8080 docker compose up`). Per la build del frontend dentro Compose, imposta `VITE_BACKEND_URL` nello stesso modo o con `export` prima di `docker compose build`.
+L’API e' su `http://localhost:8000` (porta host: `HOST_PORT` nel file `.env` in radice per l’interpolazione Compose, oppure `HOST_PORT=8080 docker compose up`).
 
-Il frontend compilato e' in `/app/frontend/dist` nell’immagine: servilo con un reverse proxy o un secondo container statico come gia' per il deploy senza Docker.
+3. Opzionale — anche il container **frontend** (nginx su porta host 8080):
 
-Variabili runtime: stesso insieme di `backend/.env.example` (`DJANGO_ALLOWED_HOSTS`, `FRONTEND_URL`, `CORS_*`, ecc.). Per Postgres interno a Compose usa `sslmode=disable` in `DATABASE_URL`.
+```bash
+docker compose --profile fullstack up --build
+```
 
-### Piattaforme (Dokploy, Railway, ecc.)
+Serve `VITE_BACKEND_URL` coerente (es. `http://localhost:8000` verso l’API locale). Variabile opzionale: `FRONTEND_HOST_PORT` per la porta host del frontend.
 
-Usa il `Dockerfile` in radice; imposta i **secret** e `DATABASE_URL` verso il servizio PostgreSQL gestito. In build, passa `VITE_BACKEND_URL` come sopra.
+Variabili runtime API: come `backend/.env.example`. Per Postgres interno a Compose usa `sslmode=disable` in `DATABASE_URL`.
+
+### Dokploy (due applicazioni)
+
+| App | Build type | Docker context | Docker file | Build args |
+|-----|------------|----------------|-------------|------------|
+| API | Dockerfile | `.` | `Dockerfile` | — |
+| Frontend | Dockerfile | `frontend` | `Dockerfile` | `VITE_BACKEND_URL=https://api.tuo-dominio.it` |
+
+Env runtime solo sull’app **API** (vedi [`env/dokploy.environment.example`](env/dokploy.environment.example)). L’app frontend di solito non richiede env runtime; TLS/domini si configurano in Dokploy.
+
+### Altre piattaforme (Railway, ecc.)
+
+Stessa suddivisione: immagine da [`Dockerfile`](Dockerfile) per il backend; immagine da [`frontend/Dockerfile`](frontend/Dockerfile) con build arg `VITE_BACKEND_URL`.
 
 ---
 
@@ -214,7 +238,7 @@ Il comando verifica e riporta: utenti sorgente, creati, aggiornati, skippati, to
 
 ### Pre-deploy
 
-- [ ] `docker build` (o `docker compose build`) ok **oppure** `pip install -r backend/requirements.txt` e `npm run build` (frontend) senza Docker
+- [ ] `docker build` immagine API + `docker build -f frontend/Dockerfile frontend` (con `VITE_BACKEND_URL`) **oppure** `pip install` / `npm run build` senza Docker
 - [ ] variabili `.env` / `.env.docker` produzione complete (`DJANGO_SECRET_KEY`, `ALLOWED_HOSTS`, DB, CORS)
 - [ ] `pdflatex` disponibile nell’immagine o sul server backend (`Dockerfile` installa i pacchetti TeX via apt)
 
