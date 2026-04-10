@@ -9,6 +9,8 @@ class AccountsConfig(AppConfig):
     name = 'accounts'
 
     def ready(self):
-        db_path = settings.DATABASES['default']['NAME']
-        path = Path(db_path)
-        path.parent.mkdir(parents=True, exist_ok=True)
+        engine = settings.DATABASES['default'].get('ENGINE', '')
+        if 'sqlite' in engine:
+            db_path = settings.DATABASES['default']['NAME']
+            path = Path(db_path)
+            path.parent.mkdir(parents=True, exist_ok=True)

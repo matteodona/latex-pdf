@@ -2,23 +2,68 @@
 
 Applicazione **Django + React (Vite)** per generare PDF da template LaTeX.
 
-**Su questo branch** il progetto è pensato per essere **avviato in locale** (nessun Docker Compose nel repository). Servono due processi: backend sulla porta **3001** e frontend sulla porta **5173**.
+Questo repository e' organizzato per avere:
+- **sviluppo locale** con SQLite (`config.settings.development`)
+- **produzione** con PostgreSQL (`config.settings.production`)
+
+L'obiettivo deploy (Hostinger VPS) e' **no Docker**, backend Django su Gunicorn + reverse proxy (nginx), frontend statico da `frontend/dist`.
 
 ---
 
 ## Requisiti
 
-- **Python 3.12+**
-- **Node.js** e **npm**
-- **TeX Live** (o MacTeX) con `pdflatex` nel `PATH` (necessario per la generazione PDF)
+- Python 3.12+
+- Node.js + npm (solo per build frontend)
+- PostgreSQL (produzione)
+- TeX Live / MacTeX con `pdflatex` nel PATH del processo backend
 
 ---
 
-## Avvio in locale
+## Configurazioni Django
 
-Usa **due terminali** (o due schede nel terminale).
+| Ambiente | Settings module | DB |
+|---|---|---|
+| Sviluppo | `config.settings.development` | SQLite (`backend/data/db.sqlite3`) |
+| Produzione | `config.settings.production` | PostgreSQL (`DATABASE_URL` o `POSTGRES_*`) |
 
-### 1. Backend (Django)
+`manage.py` di default usa development.  
+Per la produzione imposta:
+
+```bash
+export DJANGO_SETTINGS_MODULE=config.settings.production
+```
+
+`wsgi.py` defaulta a production, utile per Gunicorn.
+
+---
+
+## Variabili ambiente
+
+### Produzione (backend/.env.example)
+
+Usa `backend/.env.example` come base:
+
+- `DJANGO_SETTINGS_MODULE=config.settings.production`
+- `DJANGO_SECRET_KEY=...`
+- `DJANGO_ALLOWED_HOSTS=api.tuodominio.it`
+- `FRONTEND_URL=https://www.tuodominio.it`
+- `CORS_ALLOWED_ORIGINS=...` (opzionale, multi-origine)
+- `DATABASE_URL=postgresql://...` **oppure** `POSTGRES_DB/USER/PASSWORD/HOST/PORT`
+- hardening HTTP: `DJANGO_SECURE_SSL_REDIRECT`, `DJANGO_SECURE_HSTS_*`
+
+### Sviluppo (env/.env.development.example)
+
+- `DJANGO_SETTINGS_MODULE=config.settings.development`
+- `DJANGO_DEBUG=1`
+- `DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1`
+- `FRONTEND_URL=http://localhost:5173`
+- `VITE_BACKEND_URL=http://localhost:3001`
+
+---
+
+## Avvio locale (sviluppo)
+
+### Backend
 
 ```bash
 cd backend
@@ -26,29 +71,11 @@ python3 -m venv .venv
 source .venv/bin/activate          # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 python manage.py migrate
-```
-
-Imposta l’origine del frontend per **CORS** (deve coincidere con dove apri il browser, di solito `http://localhost:5173`):
-
-```bash
-export FRONTEND_URL=http://localhost:5173
-```
-
-**Solo la prima volta** (o se vuoi un nuovo amministratore), crea un superuser:
-
-```bash
 python manage.py create_superuser admin 'TuaPasswordSicura123!'
-```
-
-Avvia il server:
-
-```bash
 python manage.py runserver 0.0.0.0:3001
 ```
 
-Lascia questo terminale aperto. Il backend sarà su **http://localhost:3001**.
-
-### 2. Frontend (Vite)
+### Frontend
 
 ```bash
 cd frontend
@@ -57,33 +84,123 @@ export VITE_BACKEND_URL=http://localhost:3001
 npm run dev
 ```
 
-Apri **http://localhost:5173** nel browser e accedi con l’utente creato (o registrati, se previsto dal flusso).
+---
+
+## Deploy produzione (Hostinger VPS)
+
+### 1) PostgreSQL
+
+Crea DB + utente (esempio):
+
+```bash
+sudo -u postgres psql -c "CREATE USER cardy WITH PASSWORD 'change-me';"
+sudo -u postgres psql -c "CREATE DATABASE cardy OWNER cardy;"
+```
+
+### 2) Backend Django
+
+```bash
+cd backend
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env
+# modifica .env con valori reali
+export DJANGO_SETTINGS_MODULE=config.settings.production
+python manage.py migrate
+python manage.py collectstatic --noinput
+```
+
+Avvio con Gunicorn (esempio):
+
+```bash
+gunicorn config.wsgi:application --bind 127.0.0.1:8000 --workers 3
+```
+
+### 3) Frontend statico (produzione)
+
+```bash
+cd frontend
+npm ci
+export VITE_BACKEND_URL=https://api.tuodominio.it
+npm run build
+```
+
+Pubblica `frontend/dist` su nginx (o altro static hosting).
+
+### 4) Reverse proxy + TLS
+
+- nginx davanti a Gunicorn
+- HTTPS (Let's Encrypt)
+- inoltro header `X-Forwarded-Proto https` verso backend
 
 ---
 
-## URL utili
+## Migrazione dati utenti: SQLite -> PostgreSQL
+
+Se hai dati utenti in SQLite (sviluppo) e vuoi portarli in produzione:
+
+1. Esegui backup del file SQLite:
+
+```bash
+cp backend/data/db.sqlite3 backend/data/db.sqlite3.bak
+```
+
+2. Punta il backend al DB PostgreSQL (`DJANGO_SETTINGS_MODULE=...production` e variabili DB impostate).
+3. Esegui migrazioni schema:
+
+```bash
+python manage.py migrate
+```
+
+4. Dry-run migrazione utenti:
+
+```bash
+python manage.py migrate_sqlite_users --sqlite-path backend/data/db.sqlite3 --dry-run
+```
+
+5. Migrazione effettiva:
+
+```bash
+python manage.py migrate_sqlite_users --sqlite-path backend/data/db.sqlite3
+```
+
+6. Se vuoi sovrascrivere utenti gia' presenti nel target:
+
+```bash
+python manage.py migrate_sqlite_users --sqlite-path backend/data/db.sqlite3 --update-existing
+```
+
+Il comando verifica e riporta: utenti sorgente, creati, aggiornati, skippati, totale target.
+
+---
+
+## Checklist pre/post deploy
+
+### Pre-deploy
+
+- [ ] `pip install -r backend/requirements.txt` ok
+- [ ] `npm run build` (frontend) ok
+- [ ] variabili `.env` produzione complete (`DJANGO_SECRET_KEY`, `ALLOWED_HOSTS`, DB, CORS)
+- [ ] `pdflatex --version` disponibile sul server backend
+
+### Post-deploy
+
+- [ ] `python manage.py migrate` eseguito su produzione
+- [ ] endpoint health: `GET /api/health` = 200
+- [ ] login utente approvato ok
+- [ ] area admin superuser ok
+- [ ] compilazione PDF end-to-end ok
+- [ ] CORS corretto da dominio frontend reale
+
+---
+
+## URL utili (sviluppo)
 
 | Cosa | URL |
-|------|-----|
+|---|---|
 | App React | http://localhost:5173 |
 | Login | http://localhost:5173/login |
-| Area Admin (app React) | http://localhost:5173/admin (dopo login come superuser) |
-| API (es. health) | http://localhost:3001/api/health |
-| Admin Django (pannello nativo) | http://localhost:3001/admin |
-
-Per l’admin Django usa le credenziali del **superuser** creato con `create_superuser`.
-
----
-
-## Database in sviluppo
-
-Con `config.settings.development` (default di `manage.py`) il database è **SQLite** in `backend/data/db.sqlite3`. Non è necessario installare PostgreSQL per lavorare in locale su questo branch.
-
----
-
-## Note
-
-- `manage.py` usa già **`config.settings.development`**.
-- Se nel browser usi **http://127.0.0.1:5173** invece di `localhost`, imposta  
-  `export FRONTEND_URL=http://127.0.0.1:5173` prima di `runserver`, altrimenti il browser può bloccare le chiamate API per CORS.
-- Puoi creare un file **`frontend/.env`** con `VITE_BACKEND_URL=http://localhost:3001` per non dover esportare la variabile ogni volta (Vite legge i file `.env` all’avvio).
+| Admin frontend | http://localhost:5173/admin |
+| API health | http://localhost:3001/api/health |
+| Admin Django | http://localhost:3001/admin |
