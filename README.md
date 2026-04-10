@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Generatore di template per documenti tecnici
 
 Applicazione **Django + React (Vite)** per generare PDF da template LaTeX.
@@ -64,10 +65,52 @@ Usa `backend/.env.example` come base:
 ## Avvio locale (sviluppo)
 
 ### Backend
+=======
+# Generatore documentazione tecnica
+
+Web app per compilare **template LaTeX** in **PDF** con parametri compilati dal browser. Stack: **Django** (API, autenticazione, orchestrazione `pdflatex`) e **React + Vite** (interfaccia). I template vivono in `backend/projects/<slug>/` (ogni cartella ha `main.tex`, `template.json` e sezioni `.tex`).
+
+---
+
+## Cosa ti serve
+
+- **Python 3.12+** sul server che esegue Django
+- **PostgreSQL**
+- **TeX** sullo stesso host (o worker) che compila i PDF, con **`pdflatex`** nel `PATH`
+- **Node.js + npm** sulla macchina che **compila** il frontend (CI, laptop o build server); sul server che serve solo i file statici **non** serve Node in runtime, basta copiare la cartella `dist/`
+
+All’avvio Django carica **`backend/.env`** tramite **python-dotenv**.
+
+---
+
+## Struttura
+
+| Percorso | Ruolo |
+|----------|--------|
+| `backend/` | Applicazione Django, `projects/` con i template LaTeX |
+| `backend/.env` | Configurazione runtime (non versionare; modello in `.env.example`) |
+| `frontend/dist/` | Output di **`npm run build`**: è ciò che va pubblicato in produzione (nginx, CDN, bucket statico) |
+
+---
+
+## Produzione: come far girare l’app
+
+### 1. PostgreSQL
+
+Crea utente e database (una tantum), adattando nomi e password:
+
+```bash
+sudo -u postgres psql -c "CREATE USER cardy WITH PASSWORD 'password-sicura';"
+sudo -u postgres psql -c "CREATE DATABASE cardy OWNER cardy;"
+```
+
+### 2. Backend Django (server applicativo)
+>>>>>>> abbe939 (Refactor project structure to transition from Node/Express to Django for backend, implement PostgreSQL support, and enhance template management with a new API. Update README for clarity and add environment configuration examples. Introduce new frontend features for template selection and PDF generation.)
 
 ```bash
 cd backend
 python3 -m venv .venv
+<<<<<<< HEAD
 source .venv/bin/activate          # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 python manage.py migrate
@@ -262,3 +305,102 @@ Il comando verifica e riporta: utenti sorgente, creati, aggiornati, skippati, to
 | Admin frontend | http://localhost:5173/admin |
 | API health | http://localhost:3001/api/health |
 | Admin Django | http://localhost:3001/admin |
+=======
+source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env
+```
+
+In **`.env`** imposta almeno: PostgreSQL (`DATABASE_URL` oppure `POSTGRES_*`), **`DJANGO_SECRET_KEY`**, **`DJANGO_ALLOWED_HOSTS`** (dominio pubblico), **`FRONTEND_URL`** e/o **`CORS_ALLOWED_ORIGINS`** con l’**URL HTTPS** da cui gli utenti aprono il sito (es. `https://www.tuodominio.it`). **Non** impostare `DJANGO_DEBUG` in produzione.
+
+```bash
+python manage.py migrate
+python manage.py create_superuser admin 'PasswordSicura!'
+```
+
+Avvio con un server WSGI, ad esempio **Gunicorn**:
+
+```bash
+gunicorn config.wsgi:application --bind 0.0.0.0:8000
+```
+
+(regola bind/porta e reverse proxy **nginx** davanti a HTTPS come da tua infrastruttura). L’API deve essere raggiungibile dall’URL che userai in `VITE_BACKEND_URL` (es. `https://api.tuodominio.it`).
+
+### 3. Frontend (build statica, non `npm run dev`)
+
+Il comando **`npm run dev`** è solo per sviluppo sulla propria macchina. In produzione si generano file statici:
+
+```bash
+cd frontend
+npm ci
+```
+
+Crea **`frontend/.env.production`** (o esporta le variabili prima del build) con l’URL **pubblico** dell’API, quello che il browser userà dal sito in HTTPS:
+
+```env
+VITE_BACKEND_URL=https://api.tuodominio.it
+```
+
+Poi:
+
+```bash
+npm run build
+```
+
+Il risultato è in **`frontend/dist/`**. Configura **nginx** (o CDN / object storage + CDN) per servire quel contenuto come sito principale. Non serve tenere in esecuzione Vite sul server.
+
+### 4. Coerenza CORS
+
+L’origine del sito statico (es. `https://www.tuodominio.it`) deve essere consentita dal backend: **`FRONTEND_URL`** o voce in **`CORS_ALLOWED_ORIGINS`**.
+
+---
+
+## Variabili d’ambiente principali (backend)
+
+| Variabile | Ruolo |
+|-----------|--------|
+| `DATABASE_URL` | oppure `POSTGRES_*` per la connessione |
+| `POSTGRES_SSLMODE` | spesso `require` se il DB è in cloud |
+| `DJANGO_SECRET_KEY` | obbligatoria, segreta |
+| `DJANGO_ALLOWED_HOSTS` | host dell’API, separati da virgola |
+| `FRONTEND_URL` | origine del frontend (CORS) |
+| `CORS_ALLOWED_ORIGINS` | opzionale, più origini |
+
+**Build frontend:** `VITE_BACKEND_URL` va definita **prima** di `npm run build` (è incorporata nel bundle).
+
+Dettaglio in **`backend/.env.example`**.
+
+---
+
+## Sviluppo locale (opzionale)
+
+Per provare tutto sulla macchina di sviluppo:
+
+- Backend: come sopra ma `DJANGO_DEBUG=1`, `DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1`, `python manage.py runserver 0.0.0.0:3001`.
+- Frontend: `VITE_BACKEND_URL=http://localhost:3001` e solo qui **`npm run dev`** (porta tipica **5173**).
+
+---
+
+## URL di esempio
+
+| Risorsa | In produzione | In locale (dev) |
+|---------|----------------|-----------------|
+| Interfaccia | `https://www.tuo-dominio` (dove servi `dist/`) | http://localhost:5173 |
+| API | `https://api.tuo-dominio` (o path dietro nginx) | http://localhost:3001 |
+| Health | `…/api/health` | idem |
+
+---
+
+## Risoluzione problemi
+
+- **CORS:** `FRONTEND_URL` / `CORS_ALLOWED_ORIGINS` devono coincidere con l’origine reale del browser (schema + host + porta).
+- **Chiamate API sbagliate dopo il deploy:** ricompila il frontend con `VITE_BACKEND_URL` corretto.
+- **PDF:** `pdflatex` nel `PATH` del processo Gunicorn.
+- **Build:** `cd frontend && npm run build` deve completare senza errori.
+
+---
+
+## Altro
+
+Script **Node** eventualmente presenti in `backend/` (es. `index.js`) sono **legacy** e fuori dal flusso Django descritto sopra.
+>>>>>>> abbe939 (Refactor project structure to transition from Node/Express to Django for backend, implement PostgreSQL support, and enhance template management with a new API. Update README for clarity and add environment configuration examples. Introduce new frontend features for template selection and PDF generation.)
