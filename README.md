@@ -6,7 +6,7 @@ Questo repository e' organizzato per avere:
 - **sviluppo locale** con SQLite (`config.settings.development`)
 - **produzione** con PostgreSQL (`config.settings.production`)
 
-L'obiettivo deploy (Hostinger VPS) e' **no Docker**, backend Django su Gunicorn + reverse proxy (nginx), frontend statico da `frontend/dist`.
+Il deploy consigliato e' **Docker** (`Dockerfile` + `docker-compose.yml`). In alternativa, su VPS (es. Hostinger) puoi usare backend Django con Gunicorn + nginx e frontend statico da `frontend/dist`.
 
 ---
 
@@ -136,6 +136,41 @@ Pubblica `frontend/dist` su nginx (o altro static hosting).
 
 ---
 
+## Deploy con Docker
+
+Monorepo: l’immagine costruisce il frontend (Node), installa il backend (Python), include TeX (`pdflatex`) e avvia Gunicorn con migrazioni automatiche all’avvio.
+
+### Build immagine
+
+```bash
+docker build -t cardy-app \
+  --build-arg VITE_BACKEND_URL=https://api.tuodominio.it \
+  .
+```
+
+`VITE_BACKEND_URL` e' l’URL pubblico dell’API visto dal browser (viene compilato nel bundle Vite).
+
+### Compose (PostgreSQL + API)
+
+1. Copia `cp .env.docker.example .env.docker` e compila `DJANGO_SECRET_KEY`, credenziali Postgres e `DATABASE_URL` (host `db` se usi il compose incluso).
+2. Avvio:
+
+```bash
+docker compose up --build
+```
+
+L’API e' su `http://localhost:8000` (porta host: imposta `HOST_PORT` nel file `.env` in radice del repo — quello che Compose usa per l’interpolazione — oppure `HOST_PORT=8080 docker compose up`). Per la build del frontend dentro Compose, imposta `VITE_BACKEND_URL` nello stesso modo o con `export` prima di `docker compose build`.
+
+Il frontend compilato e' in `/app/frontend/dist` nell’immagine: servilo con un reverse proxy o un secondo container statico come gia' per il deploy senza Docker.
+
+Variabili runtime: stesso insieme di `backend/.env.example` (`DJANGO_ALLOWED_HOSTS`, `FRONTEND_URL`, `CORS_*`, ecc.). Per Postgres interno a Compose usa `sslmode=disable` in `DATABASE_URL`.
+
+### Piattaforme (Dokploy, Railway, ecc.)
+
+Usa il `Dockerfile` in radice; imposta i **secret** e `DATABASE_URL` verso il servizio PostgreSQL gestito. In build, passa `VITE_BACKEND_URL` come sopra.
+
+---
+
 ## Migrazione dati utenti: SQLite -> PostgreSQL
 
 Se hai dati utenti in SQLite (sviluppo) e vuoi portarli in produzione:
@@ -179,10 +214,9 @@ Il comando verifica e riporta: utenti sorgente, creati, aggiornati, skippati, to
 
 ### Pre-deploy
 
-- [ ] `pip install -r backend/requirements.txt` ok
-- [ ] `npm run build` (frontend) ok
-- [ ] variabili `.env` produzione complete (`DJANGO_SECRET_KEY`, `ALLOWED_HOSTS`, DB, CORS)
-- [ ] `pdflatex --version` disponibile sul server backend
+- [ ] `docker build` (o `docker compose build`) ok **oppure** `pip install -r backend/requirements.txt` e `npm run build` (frontend) senza Docker
+- [ ] variabili `.env` / `.env.docker` produzione complete (`DJANGO_SECRET_KEY`, `ALLOWED_HOSTS`, DB, CORS)
+- [ ] `pdflatex` disponibile nell’immagine o sul server backend (`Dockerfile` installa i pacchetti TeX via apt)
 
 ### Post-deploy
 
