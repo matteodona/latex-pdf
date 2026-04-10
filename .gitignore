@@ -18,4 +18,5 @@ npm-debug.log*
 # Env
 .env
 .env.local
+.env.docker
 env/.env.development
