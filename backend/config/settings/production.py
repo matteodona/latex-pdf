@@ -25,6 +25,8 @@ SECURE_SSL_REDIRECT = os.environ.get('DJANGO_SECURE_SSL_REDIRECT', 'true').lower
     'true',
     'yes',
 )
+# Consente all'healthcheck interno Docker (HTTP su localhost) di evitare redirect HTTPS.
+SECURE_REDIRECT_EXEMPT = [r'^api/health/?$']
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 SECURE_HSTS_SECONDS = int(os.environ.get('DJANGO_SECURE_HSTS_SECONDS', '31536000'))
