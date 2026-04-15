@@ -4,3 +4,4 @@ gunicorn>=22.0
 bcrypt>=4.1
 psycopg[binary]>=3.1,<4
 python-dotenv>=1.0,<2
+whitenoise>=6.8,<7
