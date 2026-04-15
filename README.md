@@ -189,6 +189,8 @@ Variabili runtime API: come `backend/.env.example`. Per Postgres interno a Compo
 
 Env runtime solo sull’app **API** (vedi [`env/dokploy.environment.example`](env/dokploy.environment.example)). L’app frontend di solito non richiede env runtime; TLS/domini si configurano in Dokploy.
 
+Per una checklist operativa completa del frontend (config campi Dokploy + troubleshooting errori di build), vedi [`docs/dokploy-frontend-deploy.md`](docs/dokploy-frontend-deploy.md).
+
 ### Altre piattaforme (Railway, ecc.)
 
 Stessa suddivisione: immagine da [`Dockerfile`](Dockerfile) per il backend; immagine da [`frontend/Dockerfile`](frontend/Dockerfile) con build arg `VITE_BACKEND_URL`.
