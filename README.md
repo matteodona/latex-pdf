@@ -156,7 +156,7 @@ L’URL dell’API viene compilato nel bundle (`VITE_BACKEND_URL`):
 docker build -t cardy-web \
   --build-arg VITE_BACKEND_URL=https://api.tuodominio.it \
   -f frontend/Dockerfile \
-  frontend
+  .
 ```
 
 ### Compose (PostgreSQL + API)
@@ -238,7 +238,7 @@ Il comando verifica e riporta: utenti sorgente, creati, aggiornati, skippati, to
 
 ### Pre-deploy
 
-- [ ] `docker build` immagine API + `docker build -f frontend/Dockerfile frontend` (con `VITE_BACKEND_URL`) **oppure** `pip install` / `npm run build` senza Docker
+- [ ] `docker build` immagine API + `docker build -f frontend/Dockerfile .` (con `VITE_BACKEND_URL`) **oppure** `pip install` / `npm run build` senza Docker
 - [ ] variabili `.env` / `.env.docker` produzione complete (`DJANGO_SECRET_KEY`, `ALLOWED_HOSTS`, DB, CORS)
 - [ ] `pdflatex` disponibile nell’immagine o sul server backend (`Dockerfile` installa i pacchetti TeX via apt)
 
