@@ -11,6 +11,7 @@ frontend/dist
 backend/data/*.sqlite3
 .env
 .env.*
+backend/.env
 *.md
 !README.md
-backend/.env
+frontend/
