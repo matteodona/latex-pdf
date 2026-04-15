@@ -262,3 +262,18 @@ Il comando verifica e riporta: utenti sorgente, creati, aggiornati, skippati, to
 | Admin frontend | http://localhost:5173/admin |
 | API health | http://localhost:3001/api/health |
 | Admin Django | http://localhost:3001/admin |
+
+---
+
+## Test API automatici
+
+Per una smoke test rapida delle API backend (incluse operazioni utenti su DB), usa:
+
+```bash
+python3 api-tests/run_api_tests.py \
+  --base-url "https://api.generatoredocumentazionetecnica.it/api" \
+  --admin-user "<admin_username>" \
+  --admin-pass "<admin_password>"
+```
+
+La documentazione completa dei test è in [`api-tests/README.md`](api-tests/README.md).
