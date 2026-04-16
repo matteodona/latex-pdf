@@ -6,7 +6,7 @@ Questo repository e' organizzato per avere:
 - **sviluppo locale** con SQLite (`config.settings.development`)
 - **produzione** con PostgreSQL (`config.settings.production`)
 
-Il deploy consigliato e' **Docker** con **due immagini**: API ([`Dockerfile`](Dockerfile) in radice) e frontend statico ([`frontend/Dockerfile`](frontend/Dockerfile) con nginx). In alternativa, su VPS puoi usare Gunicorn + nginx senza container.
+Il deploy consigliato e': **backend Docker** (immagine da [`Dockerfile`](Dockerfile) in radice) + **frontend Nixpacks** (build Vite/Node in Dokploy). In alternativa, su VPS puoi usare Gunicorn + nginx senza container.
 
 ---
 
@@ -136,9 +136,9 @@ Pubblica `frontend/dist` su nginx (o altro static hosting).
 
 ---
 
-## Deploy con Docker
+## Deploy con Docker (backend)
 
-Due immagini separate: **solo API** (Python + TeX + Gunicorn) e **solo frontend** (Vite build + nginx per SPA).
+Il Dockerfile in radice e' dedicato all'API (Python + TeX + Gunicorn).
 
 ### Build immagine API
 
@@ -146,18 +146,7 @@ Due immagini separate: **solo API** (Python + TeX + Gunicorn) e **solo frontend*
 docker build -t cardy-api .
 ```
 
-Contesto build: radice repo (il [`.dockerignore`](.dockerignore) esclude `frontend/` per alleggerire il contesto).
-
-### Build immagine frontend
-
-L’URL dell’API viene compilato nel bundle (`VITE_BACKEND_URL`):
-
-```bash
-docker build -t cardy-web \
-  --build-arg VITE_BACKEND_URL=https://api.tuodominio.it \
-  -f frontend/Dockerfile \
-  frontend
-```
+Contesto build: radice repo (`.`).
 
 ### Compose (PostgreSQL + API)
 
@@ -170,14 +159,6 @@ docker compose up --build
 
 L’API e' su `http://localhost:8000` (porta host: `HOST_PORT` nel file `.env` in radice per l’interpolazione Compose, oppure `HOST_PORT=8080 docker compose up`).
 
-3. Opzionale — anche il container **frontend** (nginx su porta host 8080):
-
-```bash
-docker compose --profile fullstack up --build
-```
-
-Serve `VITE_BACKEND_URL` coerente (es. `http://localhost:8000` verso l’API locale). Variabile opzionale: `FRONTEND_HOST_PORT` per la porta host del frontend.
-
 Variabili runtime API: come `backend/.env.example`. Per Postgres interno a Compose usa `sslmode=disable` in `DATABASE_URL`.
 
 ### Dokploy (due applicazioni)
@@ -185,15 +166,14 @@ Variabili runtime API: come `backend/.env.example`. Per Postgres interno a Compo
 | App | Build type | Docker context | Docker file | Build args |
 |-----|------------|----------------|-------------|------------|
 | API | Dockerfile | `.` | `Dockerfile` | — |
-| Frontend | Dockerfile | `frontend` | `Dockerfile` | `VITE_BACKEND_URL=https://api.tuo-dominio.it` |
+| Frontend | Nixpacks | `frontend` | — | `VITE_BACKEND_URL=https://api.tuo-dominio.it` + `NIXPACKS_*` |
 
-Env runtime solo sull’app **API** (vedi [`env/dokploy.environment.example`](env/dokploy.environment.example)). L’app frontend di solito non richiede env runtime; TLS/domini si configurano in Dokploy.
-
-Per una checklist operativa completa del frontend (config campi Dokploy + troubleshooting errori di build), vedi [`docs/dokploy-frontend-deploy.md`](docs/dokploy-frontend-deploy.md).
+Env runtime solo sull’app **API** (vedi [`env/dokploy.environment.example`](env/dokploy.environment.example)).
+Per l'app frontend Nixpacks imposta almeno `VITE_BACKEND_URL` e i comandi `NIXPACKS_INSTALL_CMD`, `NIXPACKS_BUILD_CMD`, `NIXPACKS_START_CMD` (porta `3000`). TLS/domini si configurano in Dokploy.
 
 ### Altre piattaforme (Railway, ecc.)
 
-Stessa suddivisione: immagine da [`Dockerfile`](Dockerfile) per il backend; immagine da [`frontend/Dockerfile`](frontend/Dockerfile) con build arg `VITE_BACKEND_URL`.
+Stessa suddivisione: immagine Docker da [`Dockerfile`](Dockerfile) per il backend; frontend deployato con build Node (Nixpacks) e variabile `VITE_BACKEND_URL`.
 
 ---
 
@@ -240,7 +220,7 @@ Il comando verifica e riporta: utenti sorgente, creati, aggiornati, skippati, to
 
 ### Pre-deploy
 
-- [ ] `docker build` immagine API + `docker build -f frontend/Dockerfile frontend` (con `VITE_BACKEND_URL`) **oppure** `pip install` / `npm run build` senza Docker
+- [ ] `docker build` immagine API e verifica env Dokploy frontend Nixpacks (`VITE_BACKEND_URL`, `NIXPACKS_*`, porta 3000) **oppure** `pip install` / `npm run build` senza Docker
 - [ ] variabili `.env` / `.env.docker` produzione complete (`DJANGO_SECRET_KEY`, `ALLOWED_HOSTS`, DB, CORS)
 - [ ] `pdflatex` disponibile nell’immagine o sul server backend (`Dockerfile` installa i pacchetti TeX via apt)
 
