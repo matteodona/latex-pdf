@@ -22,8 +22,12 @@ DJANGO_SECURE_HSTS_PRELOAD=true
 # Opzionale: GUNICORN_WORKERS=2  GUNICORN_TIMEOUT=120
 
 # =============================================================================
-# Dokploy — App FRONTEND (nginx statico)
-# Build args (non env runtime obbligatorie):
+# Dokploy — App FRONTEND (Nixpacks)
+# Env/build vars consigliate:
 #   VITE_BACKEND_URL=https://api.tuodominio.it
-# Docker: context = frontend , Dockerfile = Dockerfile
+#   NIXPACKS_INSTALL_CMD=npm ci
+#   NIXPACKS_BUILD_CMD=npm run build
+#   NIXPACKS_START_CMD=npx serve -s dist -l 3000
+#   PORT=3000
+# Domain: container port 3000
 # =============================================================================
