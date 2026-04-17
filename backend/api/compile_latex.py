@@ -2,6 +2,10 @@ import shutil
 import subprocess
 import tempfile
 from pathlib import Path
+import re
+
+
+PARAM_KEY_RE = re.compile(r'^[A-Za-z0-9_-]+$')
 
 
 def _read_text_file(path: Path) -> str:
@@ -59,11 +63,17 @@ def _format_tabella_revisioni(rows):
     return '\n\\hline\n'.join(lines)
 
 
+def _safe_param_key(key):
+    return isinstance(key, str) and bool(PARAM_KEY_RE.fullmatch(key))
+
+
 def _flatten_params_structure(obj, path_prefix=''):
     result = []
     if obj is None or not isinstance(obj, dict):
         return result
     for key, val in obj.items():
+        if not _safe_param_key(key):
+            continue
         if val is not None and isinstance(val, dict) and not isinstance(val, list) and not _is_file_node(val):
             result.extend(_flatten_params_structure(val, path_prefix + key + '/'))
         elif _is_file_node(val):
@@ -82,11 +92,17 @@ def _has_params_in_structure(obj):
 
 
 def _apply_params_to_file(dir_path: Path, file_path: str, params: dict):
-    full_path = dir_path / file_path
+    full_path = (dir_path / file_path).resolve()
+    try:
+        full_path.relative_to(dir_path.resolve())
+    except ValueError:
+        return
     if not full_path.is_file():
         return
     content = _read_text_file(full_path)
     for key, value in params.items():
+        if not _safe_param_key(key):
+            continue
         placeholder = '\\{' + key + '\\}'
         replacement = ''
         if isinstance(value, list):
@@ -123,20 +139,29 @@ def compile_to_pdf(project_dir: str | Path, params_structure=None) -> Path:
         temp_dir = Path(tempfile.mkdtemp(prefix='latex-'))
         shutil.copytree(dir_path, temp_dir, dirs_exist_ok=True)
         work_dir = temp_dir
+        stale_pdf = work_dir / 'main.pdf'
+        if stale_pdf.is_file():
+            stale_pdf.unlink()
         _apply_params(work_dir, params_structure)
 
+    run_results = []
     try:
         for _ in range(2):
-            subprocess.run(
-                ['pdflatex', '-interaction=nonstopmode', 'main.tex'],
-                cwd=work_dir,
-                capture_output=True,
-                check=False,
+            run_results.append(
+                subprocess.run(
+                    ['pdflatex', '-interaction=nonstopmode', 'main.tex'],
+                    cwd=work_dir,
+                    capture_output=True,
+                    check=False,
+                )
             )
     except OSError:
         pass
 
     pdf_path = work_dir / 'main.pdf'
+    # pdflatex puo` restituire returncode != 0 anche quando il PDF viene
+    # comunque generato (warning/non-fatal issues). Consideriamo fallimento
+    # solo se il file finale non esiste.
     if not pdf_path.is_file():
         hint = _log_tail_for_error(work_dir)
         if temp_dir is not None:

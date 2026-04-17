@@ -1,9 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from './AuthContext';
-
-const API_BASE_URL =
-  import.meta.env.VITE_BACKEND_URL ?? 'http://localhost:3001';
+import { API_BASE_URL } from '../apiBaseUrl';
 
 type PendingUser = {
   id: number;

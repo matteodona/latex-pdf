@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import {
   createContext,
   useCallback,
@@ -6,6 +7,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
+import { API_BASE_URL } from '../apiBaseUrl';
 
 type UserRole = 'superuser' | 'user';
 
@@ -28,9 +30,6 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
-const API_BASE_URL =
-  import.meta.env.VITE_BACKEND_URL ?? 'http://localhost:3001';
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AuthState>({ status: 'unauthenticated' });
 
@@ -41,12 +40,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       );
       const authHeader = `Basic ${btoa(`${creds.username}:${creds.password}`)}`;
 
-      const resp = await fetch(`${API_BASE_URL}/api/auth/check`, {
-        method: 'POST',
-        headers: {
-          Authorization: authHeader,
-        },
-      });
+      let resp: Response;
+      try {
+        resp = await fetch(`${API_BASE_URL}/api/auth/check`, {
+          method: 'POST',
+          headers: {
+            Authorization: authHeader,
+          },
+        });
+      } catch {
+        setState({ status: 'unauthenticated' });
+        throw new Error(
+          `Impossibile raggiungere il backend (${API_BASE_URL}). Verifica URL API/CORS.`,
+        );
+      }
       if (!resp.ok) {
         let message = 'Credenziali non valide';
         try {
