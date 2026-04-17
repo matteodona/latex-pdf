@@ -33,6 +33,9 @@ def get_basic_user(request):
     if not user.check_password(password):
         return None, _www_authenticate_response(401, {'error': 'Credenziali non valide'})
 
+    if not user.is_active:
+        return None, JsonResponse({'error': 'Account disattivato'}, status=403)
+
     if user.role != User.Role.SUPERUSER and user.status != User.Status.APPROVED:
         return None, JsonResponse(
             {

@@ -1,3 +1,258 @@
+# Generatore documentazione tecnica (locale)
+
+Guida breve per avviare **in sviluppo**:
+- Backend in locale (hot reload, senza riavviare Docker a ogni modifica)
+- Frontend con Vite
+
+## Multi-frontend (single repo)
+
+Il repository supporta frontend separati per progetto/backend:
+
+- `frontend/` -> app relazione tecnico-specialistica (attuale)
+- `frontend-<nome-progetto>/` -> app dedicate future
+
+Per creare un nuovo frontend progetto:
+
+1. duplica `frontend/` in `frontend-<nome-progetto>/`;
+2. imposta `VITE_BACKEND_URL` del backend dedicato;
+3. personalizza form/payload hardcoded del progetto;
+4. build/deploy dell'app in modo indipendente.
+
+## A) Sviluppo consigliato (backend fuori Docker + hot reload)
+
+### Backend (SQLite)
+```bash
+cd backend
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+
+export DJANGO_SETTINGS_MODULE=config.settings.development
+python manage.py migrate
+
+# opzionale
+python manage.py createsuperuser
+
+python manage.py runserver 0.0.0.0:3001
+```
+
+### Frontend (Vite)
+```bash
+cd frontend
+npm install
+export VITE_BACKEND_URL=http://localhost:3001
+npm run dev
+```
+
+Apri:
+- Frontend: `http://localhost:5173`
+- Django admin: `http://localhost:3001/admin`
+
+## Risoluzione automatica URL API (dev/prod)
+
+Il frontend ora risolve `API_BASE_URL` in questo ordine:
+
+1. usa `VITE_BACKEND_URL` se impostata;
+2. se non impostata, in locale (`localhost`/`127.0.0.1`) con Vite su `5173/5174` usa `http://localhost:3001`;
+3. negli altri casi usa lo stesso origin del frontend (comodo in produzione dietro reverse proxy).
+
+In pratica:
+
+- in **dev locale** puoi avviare senza cambiare variabili ogni volta;
+- in **produzione** funziona out-of-the-box se frontend e API stanno sullo stesso origin/proxy;
+- se API e frontend stanno su domini diversi, imposta esplicitamente `VITE_BACKEND_URL`.
+
+## B) Backend + DB con Docker Compose (PostgreSQL)
+
+In root del progetto:
+```bash
+cp .env.docker.example .env.docker
+docker compose up --build
+```
+
+Backend:
+- API health: `http://localhost:8000/api/health`
+- Django admin: `http://localhost:8000/admin`
+
+Frontend (Vite normale):
+```bash
+cd frontend
+npm install
+export VITE_BACKEND_URL=http://localhost:8000
+npm run dev
+```
+
+# Generatore documentazione tecnica (locale)
+
+Guida breve per avviare **in sviluppo**:
+- Backend in locale (nessun restart Docker a ogni modifica)
+- Frontend con Vite
+
+## A) Sviluppo consigliato (backend fuori Docker + hot reload)
+
+### Backend (SQLite)
+```bash
+cd backend
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+
+export DJANGO_SETTINGS_MODULE=config.settings.development
+python manage.py migrate
+
+# opzionale
+python manage.py createsuperuser
+
+python manage.py runserver 0.0.0.0:3001
+```
+
+### Frontend (Vite)
+```bash
+cd frontend
+npm install
+export VITE_BACKEND_URL=http://localhost:3001
+npm run dev
+```
+
+Apri:
+- `http://localhost:5173`
+
+## B) Backend + DB con Docker Compose (PostgreSQL)
+
+In una shell dalla root del progetto:
+```bash
+cp .env.docker.example .env.docker
+docker compose up --build
+```
+
+Backend:
+- `http://localhost:8000/api/health`
+- `http://localhost:8000/admin`
+
+Frontend (Vite normale, stessa shell del dev):
+```bash
+cd frontend
+npm install
+export VITE_BACKEND_URL=http://localhost:8000
+npm run dev
+```
+
+# Generatore documentazione tecnica (locale)
+
+Guida breve per avviare **in locale** lo stack:
+- `db` + `backend` con Docker Compose
+- `frontend` con Vite (normale, non Docker)
+
+## 1) Backend + PostgreSQL (Docker)
+
+1. In root del progetto:
+   ```bash
+   cp .env.docker.example .env.docker
+   docker compose up --build
+   ```
+
+2. Backend disponibile su:
+   - `http://localhost:8000/api/health`
+   - `http://localhost:8000/admin`
+
+## 2) Frontend (Vite normale)
+
+In una nuova terminale:
+```bash
+cd frontend
+npm install
+export VITE_BACKEND_URL=http://localhost:8000
+npm run dev
+```
+
+Apri:
+- `http://localhost:5173`
+
+## Sviluppo (admin)
+
+Se non hai ancora un superuser:
+```bash
+docker compose exec web python manage.py createsuperuser
+```
+
+# Generatore documentazione tecnica (locale)
+
+Guida breve per avviare **in locale**:
+- `db` + `backend` con Docker Compose
+- `frontend` con Vite (normale, non Docker)
+
+## Prerequisiti
+
+- Docker Desktop (docker + docker compose)
+- Node.js + npm
+
+## Backend + DB (Docker)
+
+1. In root progetto:
+
+```bash
+cp .env.docker.example .env.docker
+docker compose up --build
+```
+
+Backend:
+- `http://localhost:8000/api/health`
+- `http://localhost:8000/admin`
+
+## Frontend (Vite normale)
+
+In una nuova terminale:
+
+```bash
+cd frontend
+npm install
+export VITE_BACKEND_URL=http://localhost:8000
+npm run dev
+```
+
+Apri:
+- `http://localhost:5173`
+
+<details><summary>Altro (documentazione storica)</summary>
+
+# Generatore documentazione tecnica (locale)
+
+Questa guida serve solo per avviare **in locale**: `db` + `backend` con Docker Compose e `frontend` con Vite (normale).
+
+## Prerequisiti
+
+- Docker Desktop (docker + docker compose)
+- Node.js + npm
+
+## 1) Backend + PostgreSQL (Docker)
+
+In root del progetto:
+
+```bash
+cp .env.docker.example .env.docker
+docker compose up --build
+```
+
+Backend disponibile su:
+- `http://localhost:8000/api/health`
+- `http://localhost:8000/admin`
+
+## 2) Frontend (Vite normale)
+
+In una nuova terminale:
+
+```bash
+cd frontend
+npm install
+export VITE_BACKEND_URL=http://localhost:8000
+npm run dev
+```
+
+Apri:
+- `http://localhost:5173`
+
+Nota: il backend in locale e' gia' configurato per CORS verso `http://localhost:5173`.
+
 # Generatore di template per documenti tecnici
 
 Applicazione **Django + React (Vite)** per generare PDF da template LaTeX.
@@ -259,3 +514,5 @@ python3 api-tests/run_api_tests.py \
 ```
 
 La documentazione completa dei test è in [`api-tests/README.md`](api-tests/README.md).
+
+</details>

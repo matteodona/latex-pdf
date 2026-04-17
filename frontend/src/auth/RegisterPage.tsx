@@ -1,9 +1,7 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-
-const API_BASE_URL =
-  import.meta.env.VITE_BACKEND_URL ?? 'http://localhost:3001';
+import { API_BASE_URL } from '../apiBaseUrl';
 
 export function RegisterPage() {
   const navigate = useNavigate();
